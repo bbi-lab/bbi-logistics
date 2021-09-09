@@ -26,11 +26,13 @@ cd ~/logistics/.env/
 ```
 
 You'll need to copy your REDCap API token from each project and create a new file containing only the token.
-We create file names using this pattern: `REDCAP_API_TOKEN_redcap.iths.org_{PROJECT_ID}`.
+We create file names using this pattern: `REDCAP_API_TOKEN_{REDCAP API URL}_{PROJECT_ID}`.
 Here's an example of creating a new environment variable for the SCAN IRB English project (project ID 22461) with the text editor `nano`:
 ```
 nano redcap/REDCAP_API_TOKEN_redcap.iths.org_22461
 ```
+HCT now uses the url `hct.redcap.rit.uw.edu`
+
 Note that you are literally typing the string `REDCAP_API_TOKEN` here.
 Once you're inside the file with `nano`, paste your actual token copied from REDCap.
 Then, press `CTRL+X` to exit.
