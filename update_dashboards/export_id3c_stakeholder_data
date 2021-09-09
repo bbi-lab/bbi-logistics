@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "$0")/.."
+
+psql -c "\copy (
+    Select distinct on (sample_id)
+    sample_id,
+    encounter.details ->> 'language' as language_enrolled,
+    SE.scan_study_arm,
+    SE.encountered::date,
+    SE.priority_code,
+    SE.puma,
+    SE.sex,
+    SE.race,
+    SE.age,
+    SE.hispanic_or_latino::int,
+    PA.present
+    From
+    shipping.scan_encounters_v1 as SE
+    left join warehouse.encounter using (encounter_id)
+    left join (
+        select PA.sample_id,
+            case
+                when present then 'positive'
+                when not present then 'negetive'
+                when present is null then 'inconclusive'
+            end as present
+        from shipping.hcov19_presence_absence_result_v1 PA
+        where PA.organism = 'Human_coronavirus.2019' and
+        PA.details @> '{\"device\": \"TaqmanQPCR\"}'
+        ) PA using (sample_id)
+order by
+    sample_id desc
+)
+to ./data/id3c_scan_data.csv csv header;"
