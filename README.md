@@ -3,7 +3,7 @@ Operational automation and dashboard updates for Brotman Baty Institute Logistic
 
 ## Usage
 ```
-python orders/delivery_express_order.py
+python3 orders/delivery_express_order.py
 ```
 
 ## Setup
@@ -11,11 +11,12 @@ Clone the logistics repo
 ```
 cd ~/
 git clone https://github.com/cooperqmarshall/logistics.git
+cd logistics
 ```
 
 Install required packages using:
 ```
-pip install -r requirements.txt
+python3 -mpip install -r requirements.txt
 ```
 
 ## Configure REDCap API Token environment variables
