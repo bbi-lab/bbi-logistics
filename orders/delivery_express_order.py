@@ -34,6 +34,7 @@ exportColumns = [
     'Pickup Location']
 replaceAddressColumns = ['Street Address 2','Apt Number 2','City 2','State 2','Zipcode 2']
 coreAddressColumns = ['Street Address','Apt Number','City','State','Zipcode']
+otherReplace = ['First Name','Last Name','Delivery Instructions','Email','Phone','Notification Pref',]
 
 def main():
     '''Gets orders from redcap and send them to dispatch'''
@@ -102,6 +103,7 @@ def get_redcap_orders(project, projectDict):
         orders = pd.DataFrame(r.json(), dtype='string').rename(columns=projectDict[project])
     except:
         print(f'unable to create DataFrame with: {r.json()}')
+        return
 
     # if there are columns that hint at possible replacement addresses
     if all(val in orders.columns for val in replaceAddressColumns):
@@ -128,6 +130,8 @@ def use_best_address(original_address, row):
         for val in coreAddressColumns:
             # the replacement fields have a trailing 2
             row[val] = update.loc[str(val+' 2')]
+    for val in otherReplace:
+        row[val] = original_address.iloc[0][val]
     return row
 
 def clean(orders, project, zipcode_var_map):
