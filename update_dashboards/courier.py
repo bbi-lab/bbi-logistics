@@ -6,12 +6,12 @@ import pandas as pd
 from pathlib import Path
 from oauth2client.service_account import ServiceAccountCredentials
 
-base_dir = Path(__file__).resolve().parent.resolve()
+base_dir = Path(__file__).resolve().parent.parent.resolve()
 
 def main():
 	print("Connecting to Google Sheets")
 	# creates conneciton to google sheets with google api
-	client = get_gspread_client(base_dir / f'logistics-db-1615935272839-a608db2dc31d')
+	client = get_gspread_client(base_dir / f'.config/logistics-db-1615935272839-a608db2dc31d')
 	# links variables to courier_db sheets
 	db = client.open('courier_db').worksheet("courier_db")
 

@@ -16,7 +16,7 @@ def main():
 	pd.options.mode.chained_assignment = None
 	print("Connecting to Google Sheets")
 	# creates conneciton to google sheets
-	client = get_gspread_client(base_dir / f'update_dashboards/logistics-db-1615935272839-a608db2dc31d')
+	client = get_gspread_client(base_dir / f'.conf/logistics-db-1615935272839-a608db2dc31d')
 
 	# link to SCAN King External Metrics Google sheets
     # https://docs.google.com/spreadsheets/d/12PyvtpD8QlMSUzWYGiB4GfA29bSfLz8Ke_0UNN_6Jus/edit#gid=0
