@@ -106,7 +106,7 @@ def getEvents(project):
 		'content':'event',
 		'format':'json',
 	}
-	events = requests.post('https://redcap.iths.org/api/',data=data)
+	events = requests.post(url.geturl(),data=data)
 	events = events.json()
 	projectEvents = []
 	for e in events:
@@ -201,7 +201,6 @@ def getRecords(project, date, zipcode_county_map):
 		records.update(otherZips, join='left')
 
 	records = records.drop(['record_id', 'pre_scan_barcode'], axis=1)
-	print(records)
 	return(records.values.tolist())
 
 if __name__ == "__main__":
