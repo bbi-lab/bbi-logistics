@@ -70,7 +70,7 @@ def main():
 
     print(order_export.groupby(['Project Name']).size().reset_index(name='counts'))
 
-    order_export.to_csv(base_dir / f'data/DeliveryExpressOrder{datetime.now().strftime("%Y_%m_%d_%H:%M:%S")}.csv', \
+    order_export.to_csv(base_dir / f'data/DeliveryExpressOrder{datetime.now().strftime("%Y_%m_%d_%H_%M")}.csv', \
         index=False)
 
     # TODO:
@@ -108,12 +108,14 @@ def get_redcap_orders(project, projectDict):
     # if there are columns that hint at possible replacement addresses
     if all(val in orders.columns for val in replaceAddressColumns):
         orders['Order Date'] = pd.to_datetime(orders['Order Date'])
+        orders['Order Date'].replace('', pd.NA, inplace=True)
 
         # save original addresses
         original_address = orders.loc[orders['redcap_event_name'] == 'enrollment_arm_1']
         orders = orders.loc[~(orders['redcap_event_name'] == 'enrollment_arm_1')] \
-            .sort_values(by='Order Date') \
-            .drop_duplicates(subset=['Record Id'], keep='last')
+            .dropna(subset=['Order Date']) \
+            .sort_values(by='Order Date', ascending=False) \
+            .drop_duplicates(subset=['Record Id'], keep='first')
 
         orders = orders.apply(lambda row: use_best_address(original_address, row), axis=1)
 
@@ -121,8 +123,8 @@ def get_redcap_orders(project, projectDict):
 
 def use_best_address(original_address, row):
     # if there is not a replacement address use the original address for a specific record_id
+    original = original_address.loc[(original_address['Record Id'] == row['Record Id'])]
     if row[replaceAddressColumns].replace('',pd.NA).isnull().all():
-        original = original_address.loc[(original_address['Record Id'] == row['Record Id']), coreAddressColumns]
         for val in coreAddressColumns:
             row[val] = original.iloc[0][val]
     else:
@@ -131,7 +133,7 @@ def use_best_address(original_address, row):
             # the replacement fields have a trailing 2
             row[val] = update.loc[str(val+' 2')]
     for val in otherReplace:
-        row[val] = original_address.iloc[0][val]
+        row[val] = original.iloc[0][val]
     return row
 
 def clean(orders, project, zipcode_var_map):
@@ -143,9 +145,10 @@ def assign_project(row, project, zipcode_county_map):
     if project == 'HCT':
         return 'HCT'
     elif re.search('SCAN', project):
-        for county in zipcode_county_map:
-            if row['Zipcode'] in zipcode_county_map[county]:
-                return county
+        if row['Zipcode'] in zipcode_county_map['SCAN KING']:
+            return 'SCAN_KING'
+        if row['Zipcode'] in zipcode_county_map['SCAN PIERCE']:
+            return 'SCAN_PIERCE'
     return 'N/A'
 
 if __name__ == "__main__":
