@@ -145,8 +145,8 @@ def getZipcodes(needZip, project):
 	r = requests.post(url.geturl(),data=data)
 	results = r.json()
 	otherZips = pd.DataFrame(results)
-	otherZips.set_index('record_id')
-	return(otherZips.loc[['record_id',zipcodeID]])
+	otherZips = otherZips[['record_id', zipcodeID]].set_index('record_id')
+	return(otherZips)
 
 def getRecords(project, date, zipcode_county_map):
 	#get events
