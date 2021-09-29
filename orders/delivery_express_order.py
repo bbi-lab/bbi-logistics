@@ -2,6 +2,7 @@
 
 import os
 import re
+import sys
 import json
 import envdir
 import requests
@@ -49,16 +50,19 @@ def main():
     order_export = pd.DataFrame(columns=exportColumns, dtype='string')
 
     for project in projectDict:
-        print(f'Getting kit orders for {project}')
+        sys.stdout.write(f'Kit orders for {project}: ')
+        sys.stdout.flush()
         # get data from redcap report and format
         order_data = get_redcap_orders(project, projectDict)
+
+        print(len(order_data.index))
         if len(order_data.index) < 1:
             continue
 
-        # clean data
+        # substitutes raw values with lables for zipcode
         order_data = clean(order_data, project, zipcode_var_map)
 
-        # add a column for what project the order belongs
+        # add a column for the project the order belongs to
         order_data['Project Name'] = order_data.apply( \
             lambda row: assign_project(row, project, zipcode_county_map), axis=1).astype('string')
         
@@ -138,7 +142,7 @@ def use_best_address(original_address, row):
 
 def clean(orders, project, zipcode_var_map):
     if re.search('SCAN', project):
-        orders['Zipcode'] = orders.apply(lambda row: zipcode_var_map['SCAN'][row['Zipcode']], axis=1)
+        orders['Zipcode'] = orders.apply(lambda row: zipcode_var_map['SCAN'][row['Zipcode']] if row['Zipcode'] != '' else row['Zipcode'], axis=1)
     return orders
 
 def assign_project(row, project, zipcode_county_map):
@@ -149,7 +153,7 @@ def assign_project(row, project, zipcode_county_map):
             return 'SCAN_KING'
         if row['Zipcode'] in zipcode_county_map['SCAN PIERCE']:
             return 'SCAN_PIERCE'
-    return 'N/A'
+    return ''
 
 if __name__ == "__main__":
     main()
