@@ -38,11 +38,14 @@ def main():
 
 	# Import to SHARED_TPCHD_SCAN_Metrics Google Sheets
 	print('Importing data')
-	import_prio_code(data, sheet.worksheet('Priority Code'))
+	# import_prio_code(data, sheet.worksheet('Priority Code'))
+	print(data.dropna(subset=['illness_q_date']
+		).groupby(['illness_q_date'], as_index=False
+		).agg({'record_id':'count'}).shape)
 	import_enrollment(data, sheet.worksheet('Enrollment'))
-	import_zipcode(data, sheet.worksheet('Zipcode'))
-	import_age(data, sheet.worksheet('Age'))
-	import_positive(data, sheet.worksheet('Positive'))
+	# import_zipcode(data, sheet.worksheet('Zipcode'))
+	# import_age(data, sheet.worksheet('Age'))
+	# import_positive(data, sheet.worksheet('Positive'))
 
 def get_gspread_client(auth_file):
 	scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
@@ -79,6 +82,9 @@ def get_redcap_data(projectDict):
 
 def filter_pierce(data, zipcode_county_map):
 	data = data.loc[data['home_zipcode_2'].isin(zipcode_county_map['SCAN PIERCE'])]
+	'''Due to the inclusion of zipcode 98092 in Pierce county, a date cutoff is needed in order to
+	remove past enrollments to this zipcode when it was defined as being part of King County'''
+	data = data[((data['home_zipcode_2'] == '98092') & (data['illness_q_date'] > '2021-09-16')) | (data['home_zipcode_2'] != '98092')]
 	return(data)
 
 def import_prio_code(data, sheet):
