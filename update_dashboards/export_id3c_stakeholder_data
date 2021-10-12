@@ -3,19 +3,63 @@
 cd "$(dirname "$0")/.."
 
 psql -c "\copy (
-    Select distinct on (sample_id)
+Select
     sample_id,
-    encounter.details ->> 'language' as language_enrolled,
-    SE.scan_study_arm,
-    SE.encountered::date,
+    encounter.details ->> 'language' as language,
+    case
+        when scan_study_arm = 'priority_arm_1' OR priority_code is not null
+            then 'Priority Code'
+        when scan_study_arm = 'group_enroll_arm_4'
+            then 'Group Enrollment'
+        when scan_study_arm = 'asymptomatic_arm_3' OR scan_study_arm = 'symptomatic_arm_2'
+            then 'Community Enrollment'
+    end as enrollment_method,
+    case
+        when substring(puma,3,5) IN ('11610', '11611', '11612', '11613', '11614', '11615')
+            then 'South King County'
+        when substring(puma,3,5) IN ('11601', '11602', '11603', '11604', '11605', '11606', '11607', '11608', '11609', '11616')
+            then 'North King County'
+    END as region,
+    to_char(SE.encountered, 'YYYY-MM') as encountered_month,
     SE.priority_code,
+    SE.house_members,
+    SE.housing_type,
     SE.puma,
     SE.sex,
-    SE.race,
-    SE.age,
-    SE.hispanic_or_latino::int,
+    case
+        when age_range_decade = '[\"70 years\",\"80 years\")'
+            then '[\"70 years\",\"90 years\")'
+        when age_range_decade = '[\"80 years\",\"90 years\")'
+            then '[\"70 years\",\"90 years\")'
+        else age_range_decade
+    end as age_range_decade,
+    case
+        when SE.income = 'less_25k' or SE.income = '25k_50k'
+            then '0k_50k'
+        when SE.income = '50k_75k' or SE.income = '75k_100k'
+            then '50k_100k'
+        when SE.income = '100k_125k' or SE.income = '125k_150k'
+            then '100k_150k'
+        else SE.income
+    end as income,
+    case
+        when hispanic_or_latino
+            then 'Hispanic or Latino, any Race'
+        when race @> '{"other"}' or array_length(race, 1) > 1
+            then 'Other/Multi, Non Hisp.'
+        when race @> '{"white"}'
+            then 'White, not Hispanic'
+        when race @> '{"americanIndianOrAlaskaNative"}'
+            then 'Amer. Indian or Alaska Native'
+        when race @> '{"blackOrAfricanAmerican"}'
+            then 'Black, not Hispanic'
+        when race @> '{"asian"}'
+            then 'Asian, not Hispanic'
+        when race @> '{"nativeHawaiian"}'
+            then 'NH/OPI'
+    end as race_ethnicity,
     PA.present
-    From
+From
     shipping.scan_encounters_v1 as SE
     left join warehouse.encounter using (encounter_id)
     left join (
@@ -26,10 +70,12 @@ psql -c "\copy (
                 when present is null then 'inconclusive'
             end as present
         from shipping.hcov19_presence_absence_result_v1 PA
-        where PA.organism = 'Human_coronavirus.2019' and
-        PA.details @> '{\"device\": \"TaqmanQPCR\"}'
         ) PA using (sample_id)
+where
+    (substring(SE.census_tract, 3, 3) = '033' or
+    SE.census_tract is null) and
+    SE.sample_id is not null
 order by
     sample_id desc
 )
-to ./data/id3c_scan_data.csv csv header;"
+to ./data/id3c_scan_stakeholder_data.csv csv header;"
