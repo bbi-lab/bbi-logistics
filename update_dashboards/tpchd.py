@@ -43,9 +43,9 @@ def main():
 		).groupby(['illness_q_date'], as_index=False
 		).agg({'record_id':'count'}).shape)
 	import_enrollment(data, sheet.worksheet('Enrollment'))
-	# import_zipcode(data, sheet.worksheet('Zipcode'))
-	# import_age(data, sheet.worksheet('Age'))
-	# import_positive(data, sheet.worksheet('Positive'))
+	import_zipcode(data, sheet.worksheet('Zipcode'))
+	import_age(data, sheet.worksheet('Age'))
+	import_positive(data, sheet.worksheet('Positive'))
 
 def get_gspread_client(auth_file):
 	scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
