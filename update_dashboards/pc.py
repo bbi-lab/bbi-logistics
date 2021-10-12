@@ -71,7 +71,6 @@ def import_pc(data, sheet):
 		).dropna(subset=['issue']
 		).replace(pd.NA,'')
 
-	print(data.values.tolist())
 	sheet.delete_rows(2, sheet.row_count)
 	try:
 		sheet.append_rows(data.values.tolist(), value_input_option='USER_ENTERED')
