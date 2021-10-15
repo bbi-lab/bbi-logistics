@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")/.."
 
-psql -c "\copy (
+PGSERVICE=seattleflu-production psql -c "\copy (
 Select
     sample_id,
     encounter.details ->> 'language' as language,
