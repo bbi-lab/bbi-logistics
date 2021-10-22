@@ -93,7 +93,7 @@ def get_ge_redcap_data():
 	url = urlparse(os.environ.get("REDCAP_API_URL"))
 
 	formData = {
-		'token':os.environ.get(f"REDCAP_API_TOKEN_{url.netloc}_56829"),
+		'token':os.environ.get(f"REDCAP_API_TOKEN_{url.netloc}_21991"),
 		'content':'record',
 		'format':'json',
 		'type': 'flat',
