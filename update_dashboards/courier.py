@@ -12,8 +12,8 @@ def main():
 	print("Connecting to Google Sheets")
 	# creates conneciton to google sheets with google api
 	client = get_gspread_client(base_dir / f'.config/logistics-db-1615935272839-a608db2dc31d')
-	# links variables to courier_db sheets
-	db = client.open('courier_db').worksheet("courier_db")
+	# links variables to courier sheet
+	db = client.open('Logistics Data').worksheet("courier")
 
 	print("Calculating missing dates")
 	# find what dates in the google sheets are missing

@@ -72,8 +72,8 @@ def main():
 	client = get_gspread_client(base_dir / f'.config/logistics-db-1615935272839-a608db2dc31d')
 	
 	#links variables to ship_out_db sheets
-	db = client.open('ship_out_db').worksheet('ship_out_db')
-	doc = client.open('ship_out_db').worksheet('doc')
+	db = client.open('Logistics Data').worksheet('kits')
+	doc = client.open('Logistics Data').worksheet('kits_update')
 
 	lastImport = doc.acell('A2').value
 	print('{: <30}{}'.format('Getting kits shipped after:',str(lastImport)))

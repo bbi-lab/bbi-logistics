@@ -34,7 +34,7 @@ def main():
 	# import_pc(pc_data, sheet.worksheet('pc'))
 
 	print('Getting Group Enrollment REDCap data')
-	ge_data = pd.DataFrame(get_ge_redcap_data()).apply(lambda x: pd.to_datetime(x).dt.date)
+	ge_data = pd.DataFrame(get_ge_redcap_data()).apply(lambda x: pd.to_datetime(x).dt.strftime('%Y-%m-%d'))
 
 	print('Importing Group Enrollment data')
 	import_ge(ge_data, sheet.worksheet('ge'))
@@ -114,7 +114,9 @@ def import_ge(data, sheet):
 		).rename(columns={'index':'date','referral_date':'referrals'})
 	dfs = [referrals, attmepts, enrollments]
 	df_final = reduce(lambda left,right: pd.merge(left,right,on='date',how='outer'), dfs)
+
 	sheet.delete_rows(2, sheet.row_count)
+
 	try:
 		sheet.append_rows(df_final.fillna(0).values.tolist(), value_input_option='USER_ENTERED')
 	except Exception as e:

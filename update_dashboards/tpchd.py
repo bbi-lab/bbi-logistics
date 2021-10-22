@@ -39,9 +39,6 @@ def main():
 	# Import to SHARED_TPCHD_SCAN_Metrics Google Sheets
 	print('Importing data')
 	import_prio_code(data, sheet.worksheet('Priority Code'))
-	print(data.dropna(subset=['illness_q_date']
-		).groupby(['illness_q_date'], as_index=False
-		).agg({'record_id':'count'}).shape)
 	import_enrollment(data, sheet.worksheet('Enrollment'))
 	import_zipcode(data, sheet.worksheet('Zipcode'))
 	import_age(data, sheet.worksheet('Age'))
