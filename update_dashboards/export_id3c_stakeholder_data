@@ -21,6 +21,7 @@ Select
             then 'North King County'
     END as region,
     to_char(SE.encountered, 'YYYY-MM') as encountered_month,
+    SE.encountered_week,
     SE.priority_code,
     SE.house_members,
     SE.housing_type,
@@ -58,6 +59,7 @@ Select
         when race @> '{"nativeHawaiian"}'
             then 'NH/OPI'
     end as race_ethnicity,
+    SE.vaccination_status,
     PA.present
 From
     shipping.scan_encounters_v1 as SE
