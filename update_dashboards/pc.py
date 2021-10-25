@@ -27,11 +27,11 @@ def main():
 	sheet = client.open('Logistics Data')
 
 	# Export all records from SCAN redcap
-	# print('Getting PC REDCap data')
-	# pc_data = pd.DataFrame(get_pc_redcap_data())
+	print('Getting PC REDCap data')
+	pc_data = pd.DataFrame(get_pc_redcap_data())
 
-	# print('Importing PC data')
-	# import_pc(pc_data, sheet.worksheet('pc'))
+	print('Importing PC data')
+	import_pc(pc_data, sheet.worksheet('pc'))
 
 	print('Getting Group Enrollment REDCap data')
 	ge_data = pd.DataFrame(get_ge_redcap_data()).apply(lambda x: pd.to_datetime(x).dt.strftime('%Y-%m-%d'))
