@@ -31,7 +31,7 @@ def main():
 	pc_data = pd.DataFrame(get_pc_redcap_data())
 
 	print('Importing PC data')
-	import_pc(pc_data, sheet.worksheet('pc'))
+	import_pc(pc_data.replace('',pd.NA), sheet.worksheet('pc'))
 
 	print('Getting Group Enrollment REDCap data')
 	ge_data = pd.DataFrame(get_ge_redcap_data()).apply(lambda x: pd.to_datetime(x).dt.strftime('%Y-%m-%d'))
@@ -53,7 +53,8 @@ def get_pc_redcap_data():
 		'redcap_sub',
 		'shipping_sub',
 		'testing_sub',
-		'results_sub']
+		'results_sub',
+		'time_fu']
 	url = urlparse(os.environ.get("REDCAP_API_URL"))
 
 	formData = {
@@ -69,12 +70,30 @@ def get_pc_redcap_data():
 	return(r.json())
 
 def import_pc(data, sheet):
-	data = pd.melt(data, id_vars=['call_date', 'study'], value_vars=['highlevel_sub',
+	# data = data.apply(lambda x: data.drop())
+
+	null_issues = data.loc[(data['highlevel_sub'].isnull()) &
+		(data['enrollment_sub'].isnull()) &
+		(data['redcap_sub'].isnull()) &
+		(data['shipping_sub'].isnull()) &
+		(data['testing_sub'].isnull()) &
+		(data['results_sub'].isnull()), ['call_date', 'time_fu', 'study']]
+	null_issues[['category','issue']] = [pd.NA, pd.NA]
+
+	data = pd.melt(data, id_vars=['call_date', 'time_fu', 'study'], value_vars=['highlevel_sub',
 		'enrollment_sub','redcap_sub','shipping_sub','testing_sub','results_sub']
 		).rename(columns={'variable': 'category', 'value': 'issue'}
-		).replace('',pd.NA
 		).dropna(subset=['issue']
-		).replace(pd.NA,'')
+		).append(null_issues)
+
+	follow_up_data = data.dropna(subset=['time_fu']
+		).drop('call_date',axis=1
+		).rename(columns={'time_fu': 'call_date'})
+	follow_up_data['call_date'] = follow_up_data.apply(lambda x: pd.to_datetime(x['call_date']).strftime('%Y-%m-%d'), axis=1)
+
+	data = data.drop('time_fu', axis=1
+		).append(follow_up_data
+		).fillna('')
 
 	sheet.delete_rows(2, sheet.row_count)
 	try:
