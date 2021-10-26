@@ -34,6 +34,7 @@ def main():
 			print('KPI or exceptions returned length 0 for {}'.format(str(day)))
 	print('{: <30}{}'.format('Total import rows:',str(len(data))))
 	db.insert_rows(data, next_available_row(db))
+	client.open('Logistics Data').worksheet('update').update('B2', datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M'))
 
 # takes a string for a location of a json file containing the google api credentials
 # returns the gspread authentication variable

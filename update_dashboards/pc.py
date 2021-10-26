@@ -39,6 +39,8 @@ def main():
 	print('Importing Group Enrollment data')
 	import_ge(ge_data, sheet.worksheet('ge'))
 
+	sheet.worksheet('update').update('A2', datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M'))
+
 def get_gspread_client(auth_file):
 	scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
 	creds = ServiceAccountCredentials.from_json_keyfile_name(auth_file, scope)
