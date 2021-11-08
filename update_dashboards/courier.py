@@ -25,16 +25,19 @@ def main():
 	for day in missing_dates:
 		date = datetime.datetime.strptime(day, '%m/%d/%y')
 		try:
-			# make call to get the data from both sheets
+			# get the data from both sheets
 			data.extend(get_courier_data(client, date))
-		# catch exception for calling a sheet that does not exist
+
 		except gspread.exceptions.SpreadsheetNotFound as e:
 			print('No sheet found for {}'.format(str(day)))
+
 		except TypeError as e:
-			print('KPI or exceptions returned length 0 for {}'.format(str(day)))
+			print(f'KPI or exceptions returned length 0 for {str(day)} {e}')
+
 	print('{: <30}{}'.format('Total import rows:',str(len(data))))
 	db.insert_rows(data, next_available_row(db))
-	client.open('Logistics Data').worksheet('update').update('B2', datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M'))
+	client.open('Logistics Data').worksheet('update').update('B2', \
+		datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M'))
 
 # takes a string for a location of a json file containing the google api credentials
 # returns the gspread authentication variable
@@ -48,7 +51,10 @@ def get_gspread_client(auth_file):
 def get_missing_dates(db):
 	today = datetime.datetime.today()
 	courier = pd.DataFrame(db.get_all_records())
-	courierDates = pd.unique(courier['date'])
+	try:
+		courierDates = pd.unique(courier['date'])
+	except KeyError:
+		courierDates = []
 	realDates = pd.date_range(datetime.datetime(2021,3,21), today).strftime('%-m/%-d/%y')
 	diffDates = list(set(realDates)-set(courierDates))
 	diffDates.sort()
@@ -59,7 +65,8 @@ def get_missing_dates(db):
 def get_courier_data(client, date):
 	# connects to the kpi and exceptions in google sheets
 	kpi = client.open('UW Brotman KPIs Excel'+str(datetime.datetime.strftime(date,'%-m_%-d_%Y'))).get_worksheet(0)
-	exceptions = client.open('UW Brotman Exceptions Excel'+str(datetime.datetime.strftime(date,'%-m_%-d_%Y'))).get_worksheet(0)
+	exceptions = client.open('UW Brotman Exceptions Excel'+ \
+		str(datetime.datetime.strftime(date,'%-m_%-d_%Y'))).get_worksheet(0)
 
 	# create dataframes for both sheets
 	kpiDF = pd.DataFrame(kpi.get_all_records())
@@ -71,8 +78,9 @@ def get_courier_data(client, date):
 
 	# column names
 	columns = ['CreateDate', 'ProjectName', 'Out/Return', 'FalseTrip', 'Late']
+	
 	# combine the kpi and exceptions data, gorup by, and aggregate
-	table = pd.concat([kpiDF[columns], exceptionsDF[columns]], ignore_index=True
+	table = pd.concat([kpiDF[columns], exceptionsDF.loc[(exceptionsDF['EventType'] == 'Other'), columns]], ignore_index=True
 		).groupby(['CreateDate','ProjectName','Out/Return'],
 		).agg({
 			'Out/Return':'count',
