@@ -5,11 +5,13 @@ import json
 import envdir
 import gspread
 import requests
-import datetime
+import xlsxwriter
+from datetime import datetime as dt
 import pandas as pd
 from pathlib import Path
 from urllib.parse import urlparse
 from oauth2client.service_account import ServiceAccountCredentials
+
 
 base_dir = Path(__file__).resolve().parent.parent.resolve()
 envdir.open(base_dir / f'.env/redcap')
@@ -26,7 +28,7 @@ def main():
 	client = get_gspread_client(base_dir / f'.config/logistics-db-1615935272839-a608db2dc31d')
 
 	# links variables to SHARED_TPCHD_SCAN_Metrics Google Sheets
-	sheet = client.open('SHARED_TPCHD_SCAN_Metrics')
+	sheet = client.open('TPCHD Dashboard')
 
 	# Export all records from SCAN redcap
 	print('Getting REDCap data')
@@ -43,6 +45,8 @@ def main():
 	import_zipcode(data, sheet.worksheet('Zipcode'))
 	import_age(data, sheet.worksheet('Age'))
 	import_positive(data, sheet.worksheet('Positive'))
+
+	download_data(sheet)
 
 def get_gspread_client(auth_file):
 	scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
@@ -148,6 +152,20 @@ def get_age_bucket(age):
 def next_available_row(worksheet):
     str_list = list(filter(None, worksheet.col_values(1)))
     return len(str_list)+1
+
+#download the data in .xlsx format to be sent as attachment in weekly email
+def download_data(google_workbook):
+	print('Exporting to .xlsx')
+	google_sheet_list = google_workbook.worksheets()
+	today = dt.now().strftime('%Y_%m_%d')
+
+	with xlsxwriter.Workbook(base_dir / f'data/SCAN_TPCHD_{today}.xlsx', {'strings_to_numbers': True}) as xlsx_workbook:
+		for sheet in google_sheet_list:
+			list_of_rows = sheet.get_all_values()
+			worksheet = xlsx_workbook.add_worksheet(sheet.title)
+
+			for row_num, data in enumerate(list_of_rows):
+				worksheet.write_row(row_num, 0, data)
 
 if __name__ == "__main__":
     main()
