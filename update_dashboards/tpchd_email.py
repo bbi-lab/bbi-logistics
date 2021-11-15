@@ -33,8 +33,8 @@ def send_email():
 		Best,<br>
 		Cooper Marshall<br><br>
 		<span style='font-style: italic;'>This email was sent automatically.</span>''','html'))
-	yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y_%m_%d')
-	filename = base_dir / f'data/SCAN_TPCHD_{yesterday}.xlsx'
+	today = datetime.now().strftime('%Y_%m_%d')
+	filename = base_dir / f'data/SCAN_TPCHD_{today}.xlsx'
 	with open(filename, "rb") as file:
 		part = MIMEApplication(
 			file.read(),
