@@ -56,6 +56,7 @@ def get_pc_redcap_data():
 		'shipping_sub',
 		'testing_sub',
 		'results_sub',
+		'feedback_sub',
 		'time_fu']
 	url = urlparse(os.environ.get("REDCAP_API_URL"))
 
@@ -74,16 +75,19 @@ def get_pc_redcap_data():
 def import_pc(data, sheet):
 	# data = data.apply(lambda x: data.drop())
 
+	data.to_csv('original_pc.csv')
+
 	null_issues = data.loc[(data['highlevel_sub'].isnull()) &
 		(data['enrollment_sub'].isnull()) &
 		(data['redcap_sub'].isnull()) &
 		(data['shipping_sub'].isnull()) &
 		(data['testing_sub'].isnull()) &
+		(data['feedback_sub'].isnull()) &
 		(data['results_sub'].isnull()), ['call_date', 'time_fu', 'study']]
 	null_issues[['category','issue']] = [pd.NA, pd.NA]
 
 	data = pd.melt(data, id_vars=['call_date', 'time_fu', 'study'], value_vars=['highlevel_sub',
-		'enrollment_sub','redcap_sub','shipping_sub','testing_sub','results_sub']
+		'enrollment_sub','redcap_sub','shipping_sub','testing_sub','results_sub', 'feedback_sub']
 		).rename(columns={'variable': 'category', 'value': 'issue'}
 		).dropna(subset=['issue']
 		).append(null_issues)
