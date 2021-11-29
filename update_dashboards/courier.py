@@ -77,11 +77,15 @@ def get_courier_data(client, date):
 		return
 
 	# column names
-	columns = ['CreateDate', 'ProjectName', 'Out/Return', 'FalseTrip', 'Late']
+	columns = ['OrderNumber','CreateDate','ProjectName','Out/Return','PUZip','DLZip','FalseTrip', 'Late']
 	
 	# combine the kpi and exceptions data, gorup by, and aggregate
-	table = pd.concat([kpiDF[columns], exceptionsDF.loc[(exceptionsDF['EventType'] == 'Other'), columns]], ignore_index=True
-		).groupby(['CreateDate','ProjectName','Out/Return'],
+	# table = pd.concat([kpiDF[columns], exceptionsDF.loc[(exceptionsDF['EventType'] == 'Other'), columns]], ignore_index=True)
+	table = kpiDF[columns].drop_duplicates(subset=['OrderNumber'])
+
+	table['ParticipantZip'] = table.apply(participant_zip, axis=1)
+
+	table = table.groupby(['CreateDate','ProjectName','Out/Return','ParticipantZip'],
 		).agg({
 			'Out/Return':'count',
 			'FalseTrip':sum,
@@ -92,6 +96,10 @@ def get_courier_data(client, date):
 	table.reset_index(inplace=True)
 	print('{: <30}{}'.format(str(date.date())+' Orders:',str(sum(table['orders']))))
 	return(table.values.tolist())
+
+# finds the participant's zipcode based on an order's Out/Return value
+def participant_zip(x):
+	return x['PUZip'] if x['Out/Return'] == 'Return' else x['DLZip']
 
 #returns the next empty row in a sheet
 def next_available_row(worksheet):
