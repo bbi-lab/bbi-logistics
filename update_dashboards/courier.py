@@ -79,9 +79,16 @@ def get_courier_data(client, date):
 	# column names
 	columns = ['OrderNumber','CreateDate','ProjectName','Out/Return','PUZip','DLZip','FalseTrip', 'Late']
 	
-	# combine the kpi and exceptions data, gorup by, and aggregate
-	# table = pd.concat([kpiDF[columns], exceptionsDF.loc[(exceptionsDF['EventType'] == 'Other'), columns]], ignore_index=True)
-	table = kpiDF[columns].drop_duplicates(subset=['OrderNumber'])
+	# The exceptions table does not have PUZip or DLZip but it may be added in the future.
+	# Setting to empty values since columns are needed for the concat
+	try:
+		exceptionsDF[['PUZip','DLZip']]
+	except KeyError:
+		exceptionsDF[['PUZip','DLZip']] = ['', '']
+
+	# combine the kpi and exceptions data and drop duplicate orders
+	table = pd.concat([kpiDF[columns], exceptionsDF[columns]], ignore_index=True
+		).drop_duplicates(subset=['OrderNumber'])
 
 	table['ParticipantZip'] = table.apply(participant_zip, axis=1)
 
