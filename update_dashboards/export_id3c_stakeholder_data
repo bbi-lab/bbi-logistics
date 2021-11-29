@@ -68,7 +68,7 @@ From
         select PA.sample_id,
             case
                 when present then 'positive'
-                when not present then 'negetive'
+                when not present then 'negative'
                 when present is null then 'inconclusive'
             end as present
         from shipping.hcov19_presence_absence_result_v1 PA
