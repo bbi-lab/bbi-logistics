@@ -1,2 +1,2 @@
 *.csv
-./etc/fake.py
+etc/fake.py
