@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import envdir
 from pathlib import Path
