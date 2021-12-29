@@ -5,6 +5,7 @@ import datetime
 import pandas as pd
 from pathlib import Path
 from oauth2client.service_account import ServiceAccountCredentials
+from pandas.core.algorithms import diff
 
 base_dir = Path(__file__).resolve().parent.parent.resolve()
 
@@ -23,22 +24,19 @@ def main():
 	print(missing_dates)
 
 	print('Getting KPI and exceptions data')
-	data = []
 
 	for day in missing_dates:
 		try:
-			data.extend(get_courier_data(client, day))
+			data = get_courier_data(client, day)
+			db.insert_rows(data, next_available_row(db))
+			client.open('Logistics Data').worksheet('update').update('B2',
+				datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M'))
 
 		except gspread.exceptions.SpreadsheetNotFound:
 			print('No sheet found for {}'.format(day))
 
 		except TypeError as e:
 			print(f'KPI or exceptions returned length 0 for {day} {e}')
-
-	print('{: <30}{}'.format('Total import rows:', str(len(data))))
-	db.insert_rows(data, next_available_row(db))
-	client.open('Logistics Data').worksheet('update').update('B2',
-		datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M'))
 
 
 # takes a string for a location of a json file containing the google api credentials
@@ -61,6 +59,7 @@ def get_missing_dates(db):
 	realDates = pd.Series(pd.date_range(datetime.datetime(2021, 3, 21), today))
 	realDates = realDates.apply(lambda x: x.strftime("%m/%d/%y").lstrip("0").replace("/0", "/"))
 	diffDates = list(set(realDates)-set(courierDates))
+	diffDates = [datetime.datetime.strptime(date, "%m/%d/%y").strftime("%m/%d/%Y").lstrip("0").replace("/0", "/") for date in diffDates]
 	return(diffDates)
 
 
@@ -105,7 +104,7 @@ def get_courier_data(client, date):
 	# reset index does not work with two Out/Return columns so renaming to orders
 	table.columns = ['orders', 'ft', 'late']
 	table.reset_index(inplace=True)
-	print('{: <30}{}'.format(str(date.date())+' Orders:', str(sum(table['orders']))))
+	print('{: <30}{}'.format(date+' Orders:', str(sum(table['orders']))))
 	return(table.values.tolist())
 
 
