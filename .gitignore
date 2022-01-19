@@ -1,6 +1,5 @@
 *.csv
 etc/fake.py
-data/*
 .config/logistics*
 .config/gspread_pandas/*
 .env/email/*
