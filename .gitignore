@@ -1,2 +1,7 @@
 *.csv
 etc/fake.py
+data/*
+.config/logistics*
+.config/gspread_pandas/*
+.env/email/*
+.env/redcap/REDCAP_API_TOKEN*
