@@ -2,5 +2,5 @@
 etc/fake.py
 .config/logistics*
 .config/gspread_pandas/*
-.env/email/*
 .env/redcap/REDCAP_API_TOKEN*
+.vscode

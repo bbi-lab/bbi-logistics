@@ -1,0 +1,8 @@
+envdir==1.0.1
+gspread==3.7.0
+numpy==1.19.5
+oauth2client==4.1.3
+pandas==1.1.5
+requests==2.25.1
+XlsxWriter==3.0.2
+pycap==1.1.3
