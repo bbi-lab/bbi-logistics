@@ -29,9 +29,10 @@ def main():
     '''Gets orders from redcap and combine them in a csv file'''
     order_export = pd.DataFrame(columns=exportColumns, dtype='string')
 
-    for project in project_dict:  #(p for p in project_dict if p == 'AIRS'):
+    for project in (p for p in project_dict if p == 'Cascadia'):
         print(f'Kit orders for {project}: ', end='')
-        project_orders = get_redcap_orders(project)
+        redcap_project = init_project(project)
+        project_orders = get_redcap_orders(redcap_project, project)
         orders = len(project_orders.index.get_level_values(0).unique())
         print(orders)
         if orders < 1:
@@ -43,20 +44,7 @@ def main():
     # TODO: import to DE
 
 
-def format_orders(project_orders, project):
-    project_orders = format_longitudinal(project, project_orders)
-    project_orders = map_scan_zipcodes(project_orders, project)
-    project_orders['Project Name'] = project_orders.apply(
-        lambda row: assign_project(row, project), axis=1)
-    project_orders.index.names = ['Record Id', 'redcap_event_name']
-    project_orders.reset_index(level=0, inplace=True)
-    # only use columns specified in the exportColumns
-    project_orders = project_orders[project_orders.columns.intersection(
-        exportColumns)]
-    return project_orders
-
-
-def get_redcap_orders(project):
+def init_project(project):
     '''Fetch content of order reports for a given project'''
     if project == "HCT":
         url = urlparse(environ.get("HCT_REDCAP_API_URL"))
@@ -66,11 +54,28 @@ def get_redcap_orders(project):
         url = urlparse(environ.get("REDCAP_API_URL"))
     api_key = environ.get(
         f"REDCAP_API_TOKEN_{url.netloc}_{project_dict[project]['project_id']}")
-    redcap_project = Project(url.geturl(), api_key)
+    return Project(url.geturl(), api_key)
+
+
+def get_redcap_orders(redcap_project, project, report_id=''):
     order_report = redcap_project.export_reports(
-        report_id=project_dict[project]['Report Id'],
+        report_id=project_dict[project]['Report Id']
+        if not report_id else report_id,
         format='df').rename(columns=project_dict[project])
     return order_report
+
+
+def format_orders(project_orders, project):
+    project_orders = format_longitudinal(project, project_orders)
+    project_orders = map_scan_zipcodes(project_orders, project)
+    project_orders = format_id(project_orders, project)
+    project_orders['Project Name'] = project_orders.apply(
+        lambda row: assign_project(row, project), axis=1)
+    # only use columns specified in the exportColumns
+    project_orders = project_orders[project_orders.columns.intersection(
+        exportColumns)]
+    print(project_orders)
+    return project_orders
 
 
 def format_longitudinal(project, orders):
@@ -122,8 +127,12 @@ def format_longitudinal(project, orders):
         original_address = orders[
             orders['redcap_repeat_instrument'] != 'symptom_survey']
         orders = orders[orders['redcap_repeat_instrument'] == 'symptom_survey'] \
-            .dropna(subset=['pu_time']) \
-            .apply(lambda row: use_best_address(original_address, row), axis=1)
+            .dropna(subset=['Order Date']) \
+            .query("~index.duplicated(keep='last')") \
+            .apply(lambda row: use_best_address(original_address, row, '0_arm_1'), axis=1)
+        orders['Today Tomorrow'] = orders.apply(lambda x: 0
+                                                if x['Pickup 1'] == 1 else 1,
+                                                axis=1)
     return orders
 
 
@@ -165,30 +174,39 @@ def map_scan_zipcodes(orders, project):
     '''maps raw to labeled zipcode values'''
     if not re.search('SCAN', project):
         return orders
-    zipcode_var_map = json.load(
-        open(path.join(base_dir, 'etc/zipcode_variable_map.json'),
-             'r',
-             encoding="utf8"))
+    with open(path.join(base_dir, 'etc/zipcode_variable_map.json'),
+              'r',
+              encoding="utf8") as file:
+        zipcode_var_map = json.load(file)
     orders['Zipcode'] = orders['Zipcode'].apply(
         lambda x: zipcode_var_map['SCAN'][str(x)] if x != '' else x)
     return orders
 
 
+def format_id(orders, project):
+    # We want to use ptid for Cascadia as the Record Id
+    if project == 'Cascadia':
+        return orders
+    orders.index.names = ['Record Id', 'redcap_event_name']
+    orders.reset_index(level=0, inplace=True)
+    return orders
+
+
 def assign_project(row, project):
     '''Returns the DE project name for an order'''
-    zipcode_county_map = json.load(
-        open(path.join(base_dir, 'etc/zipcode_county_map.json'),
-             'r',
-             encoding="utf8"))
+    with open(path.join(base_dir, 'etc/zipcode_county_map.json'),
+              'r',
+              encoding="utf8") as file:
+        zipcode_county_map = json.load(file)
     if re.search('SCAN', project):
         if row['Zipcode'] in zipcode_county_map['SCAN KING']:
             return 'SCAN_KING'
         if row['Zipcode'] in zipcode_county_map['SCAN PIERCE']:
             return 'SCAN_PIERCE'
     if project == 'Cascadia':
-        if row['City'] == 'SEA':
+        if row['State'] == 'WA':
             return 'CASCADIA_SEA'
-        if row['City'] == 'PDX':
+        if row['State'] == 'OR':
             return 'CASCADIA_PDX'
     if project == "HCT":
         return "HCT"
