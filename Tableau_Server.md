@@ -21,8 +21,8 @@ In order to avoid issues with running out of RAM, schedules have been created fo
 
 ### Maintenance
 
+A server back up script is run Saturday at 4am. This script cleans up log files older than 14 days and creates a compressed back up of the server's data.
+
 TODO:
-- Back up the server using `tsm maintenance backup` once a week
-- Clear up log files periodically
 - Save Snapshots of instance in AWS once a week
 - Set up email notifications for failed services or data refreshes
