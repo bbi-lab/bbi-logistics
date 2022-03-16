@@ -1,0 +1,25 @@
+record_id,redcap_event_name,redcap_repeat_instrument,redcap_repeat_instance,tod_tom_calc,phone_number,email,text_or_email,core_participant_first_name,core_participant_last_name,core_home_street,core_home_city,core_home_state,core_apartment_number,core_zipcode,time_test_order,core_home_street_2,core_apartment_number_2,core_home_city_2,core_zipcode_2,core_home_state_2,special_instructions,return_special_instruct
+1,enrollment_arm_1,,,,(206) 625-4321,steve@uwfake.edu,text,Steve,Martin,321 11th Ave NE,Seattle,WA,,98105,,,,,,,,
+1,encounter_arm_1,,21,0,,,,,,,,,,,,,,,,,,
+1,encounter_arm_1,,22,0,,,,,,,,,,,,,,,,,,
+1,encounter_arm_1,,101,0,,,,,,,,,,,,,,,,,,
+1,encounter_arm_1,,117,0,,,,,,,,,,,,,,,,,,
+1,encounter_arm_1,,118,1,,,,,,,,,,,3/16/2022 13:38,,,,,,deliver to porch,porch
+2,enrollment_arm_1,,,,(322) 422-3232,mm@uwfake.edu,email,Mike,Michaels,000 N None ST,Seattle,WA,,98195,,,,,,,,
+2,encounter_arm_1,,21,0,,,,,,,,,,,,,,,,,,
+2,encounter_arm_1,,22,0,,,,,,,,,,,,,,,,,,
+2,encounter_arm_1,,101,0,,,,,,,,,,,,,,,,,,
+2,encounter_arm_1,,117,0,,,,,,,,,,,,,,,,,,
+2,encounter_arm_1,,118,1,,,,,,,,,,,3/16/2022 11:38,99th Ave East,212,Seattle,98105,WA,,door
+3,enrollment_arm_1,,,,(654) 432-3213,glezzy@uwfake.edu,email,Greg,Leezy,666 S fire ave,Seattle,WA,,98126,,,,,,,,
+3,encounter_arm_1,,21,0,,,,,,,,,,,,,,,,,,
+3,encounter_arm_1,,22,0,,,,,,,,,,,3/15/2022 11:38,,,,,,,BENCH
+3,encounter_arm_1,,101,0,,,,,,,,,,,,,,,,,,
+3,encounter_arm_1,,117,0,,,,,,,,,,,,,,,,,,
+3,encounter_arm_1,,118,0,,,,,,,,,,,3/16/2022 2:00,99th Ave East,212,Seattle,98105,WA,,door
+4,enrollment_arm_1,,,,(737) 542-4329,fake@uwfake.edu,email,Frank,aker,7112 West street,Seattle,WA,,98109,,,,,,,,
+4,encounter_arm_1,,21,0,,,,,,,,,,,,,,,,,,
+4,encounter_arm_1,,22,0,,,,,,,,,,,3/15/2022 11:38,,,,,,,bbq
+4,encounter_arm_1,,101,0,,,,,,,,,,,,,,,,,,
+4,encounter_arm_1,,117,0,,,,,,,,,,,,,,,,,,
+4,encounter_arm_1,,118,0,,,,,,,,,,,3/16/2022 10:00,,,,,,,elevator

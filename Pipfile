@@ -12,6 +12,7 @@ oauth2client = "*"
 gspread = "*"
 XlsxWriter = "*"
 pycap = "*"
+csv-diff = "*"
 
 [dev-packages]
 yapf = "*"

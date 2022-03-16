@@ -1,0 +1,9 @@
+Record Id,Today Tomorrow,Order Date,First Name,Last Name,Street Address,Apt Number,City,State,Zipcode,Delivery Instructions,Email,Phone,Notification Pref,Pickup Location,Project Name
+1,1,2/10/2022 8:09,Gabe,Ham,3754 S Juerr St.,,Kent,WA,98108,,meh@gmail.com,(206) 321-4321,email,Front door,SCAN_KING
+2,0,2/10/2022 8:27,Jacob ,Welp,632 La Grande Blvd,,Tacoma,WA,98373,,shw@icloud.com,(206) 321-4322,text,Front porch ,SCAN_PIERCE
+3,0,2/10/2022 8:36,Sarah,Welp,632 La Grande Blvd,,Tacoma,WA,98373,,shw@icloud.com,(206) 321-4323,text,Front porch ,SCAN_PIERCE
+4,0,2/10/2022 8:48,Sammy,Darnanup,15908 39th Ave E,,Puyallup,WA,98446,,sdarn@gmail.com,(206) 321-4324,text,Front door,SCAN_PIERCE
+5,1,2/10/2022 9:30,Math,Parry,10023 2nd Ave SW,,Puyallup,WA,98146,,mathp@seattleu.edu,(206) 321-4325,text,Front door,SCAN_KING
+6,1,2/10/2022 10:05,Alex,Fairy,1507 N 39th ST,,Seattle,WA,98103,,grewds@gmail.com,(206) 321-4326,text,I'll leave it in between the door and the screen door.,SCAN_KING
+7,1,2/10/2022 10:25,Cool,Ruler,24815 103Ave SE,B205,Seattle,WA,98030,Please deliver to apartment rental office,coolr@gmail.com,(206) 321-4327,email,outside door of apartment rental office,SCAN_KING
+8,1,2/10/2022 11:55,Dab,Dobinson,14819 145th Avenue Ct E,,Kent,WA,98360,ring door bell when delivered,dabd@comcast.net,(206) 321-4328,email,on table by front door,SCAN_PIERCE

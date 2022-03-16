@@ -1,0 +1,9 @@
+record_id,redcap_event_name,tod_tom_calc,illness_q_date_time,age,participant_first_name,participant_last_name,home_street,apartment_number,homecity_other,home_state,home_zipcode_2,special_instructions,email,phone_number,text_or_email,return_special_instruct,priority_code
+1,group_enroll_arm_4,1,2/10/2022 8:09,5,Gabe,Ham,3754 S Juerr St.,,Kent,WA,51,,meh@gmail.com,(206) 321-4321,email,Front door,
+2,group_enroll_arm_4,0,2/10/2022 8:27,87,Jacob ,Welp,632 La Grande Blvd,,Tacoma,WA,180,,shw@icloud.com,(206) 321-4322,text,Front porch ,
+3,asymptomatic_arm_3,0,2/10/2022 8:36,3,Sarah,Welp,632 La Grande Blvd,,Tacoma,WA,180,,shw@icloud.com,(206) 321-4323,text,Front porch ,
+4,symptomatic_arm_2,0,2/10/2022 8:48,65,Sammy,Darnanup,15908 39th Ave E,,Puyallup,WA,163,,sdarn@gmail.com,(206) 321-4324,text,Front door,
+5,symptomatic_arm_2,1,2/10/2022 9:30,24,Math,Parry,10023 2nd Ave SW,,Puyallup,WA,67,,mathp@seattleu.edu,(206) 321-4325,text,Front door,
+6,symptomatic_arm_2,1,2/10/2022 10:05,23,Alex,Fairy,1507 N 39th ST,,Seattle,WA,46,,grewds@gmail.com,(206) 321-4326,text,I'll leave it in between the door and the screen door.,
+7,symptomatic_arm_2,1,2/10/2022 10:25,33,Cool,Ruler,24815 103Ave SE,B205,Seattle,WA,18,Please deliver to apartment rental office,coolr@gmail.com,(206) 321-4327,email,outside door of apartment rental office,
+8,asymptomatic_arm_3,1,2/10/2022 11:55,72,Dab,Dobinson,14819 145th Avenue Ct E,,Kent,WA,194,ring door bell when delivered,dabd@comcast.net,(206) 321-4328,email,on table by front door,

@@ -1,0 +1,8 @@
+subject_id,redcap_event_name,scr_first_name,scr_last_name,scr_phone,enr_email,enr_mail_street_address,enr_mail_street_address_2,enr_mail_city,enr_mail_state,enr_mail_zip,ss_date,ss_tod_tom_calc,ss_street_address,ss_street_address_2,ss_city,ss_state,ss_mail_zip,ss_del_instr,ss_ret_kit_where,wk_date,wk_tod_tom_calc,wk_street_address,wk_street_addrewk_2,wk_city,wk_state,wk_mail_zip,wk_del_instr,wk_ret_kit_where
+1,screening_and_enro_arm_1,Conner,Morshal,(206) 223-1234,test@uwtest.org,6666 66th Ave NE,123,Seattle,WA,98019,,,,,,,,,,,,,,,,,,
+1,week_01_arm_1,,,,,,,,,,,,,,,,,,,3/11/2022,1,999 99th Ave NE,123,Seattle,WA,98023,garbage,garbage
+1,week_01_arm_2,,,,,,,,,,,,,,,,,,,3/16/2022,1,666 66th Ave NE,123,Seattle,WA,98023,deliver to porch,porch
+2,screening_and_enro_arm_1,Ron,Swanson,(200) 555-6666,test@uwtest.org,1 North Street,,Seattle,WA,98000,,,,,,,,,,,,,,,,,,
+2,week_01_arm_2,,,,,,,,,,,,,,,,,,,3/16/2022,1,,,,,,deliver to porch,porch
+3,screening_and_enro_arm_1,Tom,Holland,(200) 555-6666,spiderman@uwtest.org,300 Paker Ave N,420,Seattle,WA,98000,,,,,,,,,,,,,,,,,,
+3,week_01_arm_2,,,,,,,,,,3/16/2022,0,,,,,,front door,stairs,3/16/2022,0,,,,,,,

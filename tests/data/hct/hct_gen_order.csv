@@ -1,0 +1,5 @@
+Record Id,Today Tomorrow,Phone,Email,Notification Pref,First Name,Last Name,Street Address,City,State,Apt Number,Zipcode,Order Date,Delivery Instructions,Pickup Location,Project Name
+1,1.0,(206) 625-4321,steve@uwfake.edu,text,Steve,Martin,321 11th Ave NE,Seattle,WA,,98105.0,2022-03-16 13:38:00,,porch,HCT
+2,1.0,(322) 422-3232,mm@uwfake.edu,email,Mike,Michaels,99th Ave East,Seattle,WA,212.0,98105.0,2022-03-16 11:38:00,,door,HCT
+3,0.0,(654) 432-3213,glezzy@uwfake.edu,email,Greg,Leezy,99th Ave East,Seattle,WA,212.0,98105.0,2022-03-16 02:00:00,,door,HCT
+4,0.0,(737) 542-4329,fake@uwfake.edu,email,Frank,aker,7112 West street,Seattle,WA,,98109.0,2022-03-16 10:00:00,,elevator,HCT

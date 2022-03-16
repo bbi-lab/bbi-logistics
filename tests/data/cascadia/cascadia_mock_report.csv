@@ -1,0 +1,15 @@
+ss_date_2,ptid,household_id,redcap_event_name,redcap_repeat_instrument,redcap_repeat_instance,participant_first_name,participant_last_name,participant_email,participant_phone,es_street_address,es_apt_num,es_city,es_state,es_zipcode,ss_pickup_location,ss_pickup_2,ss_pickup_1,ss_street_address,ss_apt_num,ss_city,ss_state,ss_zipcode
+,30,3,0_arm_1,,,George,Washington,GW@fakeuw.edu,(555) 555-5555,1600 pennsylvania ave.,2,richmond,WA,98102,,,,,,,,
+,,3,1_arm_1,,,,,,,,,,,,,,,,,,,
+2/18/2022,,3,1_arm_1,symptom_survey,1,,,,,,,,,,west wing,,1,1600 pennsylvania ave,OVAL OFFICE,richmond,WA,98101
+,uw000104A,104,0_arm_1,,,,,,,,,,,,,,,,,,,
+,000104B,104,1_arm_1,,,,,,,,,,,,,,,,,,,
+,20001060,106,0_arm_1,,,name,name,email@email.com,(555) 555-5555,1234 5th,,,,,,,,,,,,
+,,106,1_arm_1,,,,,,,,,,,,,,,,,,,
+2/5/2022,,106,0_arm_1,symptom_survey,1,,,,,,,,,,porch,,1,5433,,seattle,WA,98101
+2/5/2022,,106,0_arm_1,symptom_survey,3,,,,,,,,,,,,,,,,,
+2/5/2022,,106,0_arm_1,symptom_survey,4,,,,,,,,,,,,,,,,,
+,0,175,0_arm_1,,,,,,,4321 65th Ave NE,666,Seattle,WA,98115,,,,,,,,
+,21,175,1_arm_1,,,,,,,,,,,,,,,,,,,
+3/14/2022,,175,0_arm_1,symptom_survey,1,,,,,,,,,,,,1,,,,,
+3/14/2022,,175,1_arm_1,symptom_survey,1,,,,,,,,,,porch,1,0,,,,,
