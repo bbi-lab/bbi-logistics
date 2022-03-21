@@ -3,3 +3,4 @@ etc/fake.py
 .config/gspread_pandas/*
 .env/redcap/REDCAP_API_TOKEN*
 .vscode
+__pycache__
