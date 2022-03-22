@@ -29,10 +29,16 @@ def main():
     '''Gets orders from redcap and combine them in a csv file'''
     order_export = pd.DataFrame(columns=exportColumns, dtype='string')
 
-    for project in (p for p in project_dict if p != 'Cascadia'):
+    for project in project_dict:  #(p for p in project_dict if p != 'Cascadia'):
         print(f'Kit orders for {project}: ', end='')
-        redcap_project = init_project(project)
-        project_orders = get_redcap_orders(redcap_project, project)
+        try:
+            redcap_project = init_project(project)
+            project_orders = get_redcap_orders(redcap_project, project)
+        except Exception as err:
+            print('Error!')
+            with open(path.join(base_dir, 'data/err.txt'), 'a') as log:
+                log.write(repr(err))
+            continue
         orders = len(project_orders.index.get_level_values(0).unique())
         print(orders)
         if orders < 1:
