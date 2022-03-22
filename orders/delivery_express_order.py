@@ -29,7 +29,7 @@ def main():
     '''Gets orders from redcap and combine them in a csv file'''
     order_export = pd.DataFrame(columns=exportColumns, dtype='string')
 
-    for project in project_dict:  #(p for p in project_dict if p != 'Cascadia'):
+    for project in (p for p in project_dict if p != 'Cascadia'):
         print(f'Kit orders for {project}: ', end='')
         try:
             redcap_project = init_project(project)
