@@ -74,7 +74,6 @@ def format_orders(project_orders, project):
     # only use columns specified in the exportColumns
     project_orders = project_orders[project_orders.columns.intersection(
         exportColumns)]
-    print(project_orders)
     return project_orders
 
 
