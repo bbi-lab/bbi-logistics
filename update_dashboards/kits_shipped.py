@@ -90,7 +90,7 @@ def main():
     print('{: <30}{}'.format('Getting kits shipped after:', str(lastImport)))
 
     shipOutData = []
-    for p in projectDict:
+    for p in (p for p in projectDict if p == 'AIRS'):
         shipOutData.extend(getRecords(p, lastImport, zipcode_county_map))
 
     print('{: <30}{}'.format('S&S kits shipped:', str(len(shipOutData))))
@@ -160,7 +160,7 @@ def getZipcodes(needZip, project):
         zipcodeID = projectDict[project]['Zipcode']
         url = urlparse(os.environ.get("REDCAP_API_URL"))
 
-    zipFields = [zipcodeID, 'record_id']
+    zipFields = [zipcodeID, projectDict[project]['Record Id']]
 
     data = {
         'token':
@@ -187,7 +187,8 @@ def getZipcodes(needZip, project):
     r = requests.post(url.geturl(), data=data)
     results = r.json()
     otherZips = pd.DataFrame(results)
-    otherZips = otherZips[['record_id', zipcodeID]].set_index('record_id')
+    otherZips = otherZips[[projectDict[project]['Record Id'], zipcodeID
+                           ]].set_index(projectDict[project]['Record Id'])
     return otherZips
 
 
@@ -238,11 +239,12 @@ def getRecords(project, date, zipcode_county_map):
         return (results)
     records = pd.DataFrame(results)
     records = records[formattedFields]
-    records.set_index('record_id')
+    records.set_index(projectDict[project]['Record Id'])
 
     #list of records that have empty zip
     zipcode = projectDict[project]['Zipcode']
-    needZip = records['record_id'][records[zipcode] == '']
+    needZip = records[projectDict[project]['Record Id']][records[zipcode] ==
+                                                         '']
 
     #corrects known language zipcode formatting
     records[zipcode] = records[zipcode].apply(lambda x: re.findall(
@@ -260,7 +262,8 @@ def getRecords(project, date, zipcode_county_map):
         otherZips = getZipcodes(needZip, project)
         records.update(otherZips, join='left')
 
-    records = records.drop(['record_id', 'pre_scan_barcode'], axis=1)
+    records = records.drop(
+        [projectDict[project]['Record Id'], 'pre_scan_barcode'], axis=1)
     return records.values.tolist()
 
 
