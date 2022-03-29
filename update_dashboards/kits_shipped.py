@@ -251,11 +251,11 @@ def getRecords(project, date, zipcode_county_map):
         '[0-9][0-9][0-9][0-9][0-9]', x)[0] if re.search('^<', x) else x)
 
     #assign project name to records
-    if project in ('HCT', 'Childcare', 'SSD'):
-        records['project'] = project
-    elif re.search('SCAN+', project):
+    if re.search('SCAN+', project):
         records['project'] = records[zipcode].apply(
             lambda x: getScanProject(x, zipcode_county_map))
+    else:
+        records['project'] = project
 
     #for logitudinal if the zipcode is not in the same event as the bems date
     if len(needZip) != 0 and not (re.search('SCAN+', project)):
