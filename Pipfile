@@ -11,8 +11,8 @@ envdir = "*"
 oauth2client = "*"
 gspread = "*"
 XlsxWriter = "*"
-pycap = "*"
 csv-diff = "*"
+pycap = "~=1.1.3"
 
 [dev-packages]
 yapf = "*"
