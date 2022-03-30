@@ -63,7 +63,7 @@ projectDict = {
         'Collection': 'pre_scan_barcode',
         'BEMS': 'back_end_scan',
         'Zipcode': 'enr_mail_zip',
-        'Zipcode2': 'wk_mail_zip'
+        'Zipcode2': 'ss_mail_zip'
     }
 }
 
@@ -90,7 +90,7 @@ def main():
     print('{: <30}{}'.format('Getting kits shipped after:', str(lastImport)))
 
     shipOutData = []
-    for p in (p for p in projectDict if p == 'AIRS'):
+    for p in projectDict:  # (p for p in projectDict if p == 'AIRS'):
         shipOutData.extend(getRecords(p, lastImport, zipcode_county_map))
 
     print('{: <30}{}'.format('S&S kits shipped:', str(len(shipOutData))))
@@ -189,6 +189,7 @@ def getZipcodes(needZip, project):
     otherZips = pd.DataFrame(results)
     otherZips = otherZips[[projectDict[project]['Record Id'], zipcodeID
                            ]].set_index(projectDict[project]['Record Id'])
+
     return otherZips
 
 
