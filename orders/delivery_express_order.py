@@ -89,6 +89,7 @@ def format_longitudinal(project, orders):
         return orders
     orders['Order Date'] = pd.to_datetime(orders['Order Date'])
     orders['Order Date'].replace('', pd.NA, inplace=True)
+
     if project == 'HCT':
         original_address = orders.filter(like='enrollment_arm_1', axis=0)
         orders = orders.filter(like='encounter_arm_1', axis=0) \
@@ -159,7 +160,7 @@ def use_best_address(original_address, row, event=''):
     original = original_address.filter(items=[record_index], axis=0)
 
     if set(replace_address_columns).issubset(
-            row.index) and row[replace_address_columns].notnull().all():
+            row.index) and row[replace_address_columns].notnull().any():
         update = row.loc[replace_address_columns]
         for val in core_address_columns:
             # the replacement fields has a trailing 2
