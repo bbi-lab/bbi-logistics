@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+
+PGSERVICE=seattleflu-production psql -c "\copy (
+with q as (select sample_id, pa.details ->> 'device' as device, info.\"geneTarget\", array_agg(crt) as crt_vals, present
+from warehouse.presence_absence as pa,
+jsonb_to_recordset(pa.details -> 'replicates') as info(\"geneTarget\" text, crt text)
+where info.\"geneTarget\" in ('COVID-19_Orf1b', 'COVID-19_S_gene', 'COVID-19-S_gene', 'SARS-CoV-2_Orf1b', 'SARS-CoV-2_S')
+and pa.details ->> 'device' in ('OpenArray', 'TaqmanQPCR')
+and sample_id is not null
+and (present or present is null)
+group by sample_id, info.\"geneTarget\", present, pa.details ->> 'device'),
+
+crt_avg as (select distinct on (sample_id) sample_id, device, present,
+    SUM(case when crt_vals[1] = 'Undetermined' then 0 else crt_vals[1]::real end) filter (where \"geneTarget\" = 'COVID-19-S_gene' or \"geneTarget\" = 'COVID-19_S_gene' or \"geneTarget\" = 'SARS-CoV-2_S') as S_gene_crt_1,
+    SUM(case when crt_vals[2] = 'Undetermined' then 0 else crt_vals[2]::real end) filter (where \"geneTarget\" = 'COVID-19-S_gene' or \"geneTarget\" = 'COVID-19_S_gene' or \"geneTarget\" = 'SARS-CoV-2_S') as S_gene_crt_2,
+    SUM(case when crt_vals[1] = 'Undetermined' then 0 else crt_vals[1]::real end) filter (where \"geneTarget\" = 'COVID-19_Orf1b' or \"geneTarget\" = 'SARS-CoV-2_Orf1b') as Orf1b_crt_1,
+    SUM(case when crt_vals[2] = 'Undetermined' then 0 else crt_vals[2]::real end) filter (where \"geneTarget\" = 'COVID-19_Orf1b' or \"geneTarget\" = 'SARS-CoV-2_Orf1b') as Orf1b_crt_2
+from q
+where array_length(crt_vals, 1) = 2
+group by sample_id, device, present
+order by sample_id, device),
+
+SG as (select *,
+case
+    when ((Orf1b_crt_1 + Orf1b_crt_2) / 2) <= 30 
+    and (abs(((S_gene_crt_1 + S_gene_crt_2) / 2) - ((Orf1b_crt_1 + Orf1b_crt_2) / 2)) > 6
+    or (S_gene_crt_1 = 0 and S_gene_crt_2 = 0))
+    then 'S gene negative'
+    when ((Orf1b_crt_1 + Orf1b_crt_2) / 2) < 33
+    and abs(((S_gene_crt_1 + S_gene_crt_2) / 2) - ((Orf1b_crt_1 + Orf1b_crt_2) / 2)) <= 3
+    and (S_gene_crt_1 != 0 and S_gene_crt_2 != 0 and Orf1b_crt_1 != 0 and Orf1b_crt_2 != 0)
+    then 'S gene positive'
+end as S_gene
+from crt_avg)
+
+Select
+    sample_id,
+    case
+        when scan_study_arm = 'priority_arm_1' OR priority_code is not null
+            then 'Priority Code'
+        when scan_study_arm = 'group_enroll_arm_4'
+            then 'Group Enrollment'
+        when scan_study_arm = 'asymptomatic_arm_3' OR scan_study_arm = 'symptomatic_arm_2'
+            then 'Community Enrollment'
+    end as enrollment_method,
+    case
+        when substring(puma,3,5) IN ('11610', '11611', '11612', '11613', '11614', '11615')
+            then 'South King County'
+        when substring(puma,3,5) IN ('11601', '11602', '11603', '11604', '11605', '11606', '11607', '11608', '11609', '11616')
+            then 'North King County'
+        when substring(puma,3,3) = '115' 
+            then 'Pierce County'
+        when substring(puma,3,3) = '117' 
+            then 'Snohomish County'
+        when substring(puma,3,3) = '109'
+            then 'Yakima County'
+    END as region,
+    SE.encountered::date,
+    SE.sex,
+    SE.age,
+        case
+		when hispanic_or_latino
+			then 'Hispanic or Latino, any Race'
+		when race @> '{"other"}' or array_length(race, 1) > 1
+			then 'Other/Multi, Non Hisp.'
+		when race @> '{"white"}'
+			then 'White, not Hispanic'
+		when race @> '{"americanIndianOrAlaskaNative"}'
+			then 'Amer. Indian or Alaska Native'
+		when race @> '{"blackOrAfricanAmerican"}'
+			then 'Black, not Hispanic'
+		when race @> '{"asian"}'
+			then 'Asian, not Hispanic'
+		when race @> '{"nativeHawaiian"}'
+			then 'NH/OPI'
+	end as race_ethnicity,
+    case 
+        when PA.present is null and sample_id is null
+            then 'Not Tested'
+        when PA.present is null and sample_id is not null
+            then 'Pending'
+        else PA.present
+    end as hcov19_result,
+    SE.prior_test_positive,
+    SE.covid_vax,
+    SE.covid_doses,
+    SE.vaccination_status,
+    SE.vac_date,
+    SE.vac_date_2,
+    SE.vac_date_3,
+    SE.vaccine_manufacturer,
+    SE.vac_name_1,
+    SE.vac_name_2,
+    SE.vac_name_3,
+    SE.number_of_covid_doses,
+    SE.date_last_covid_dose,
+    SG.S_gene
+From
+    shipping.scan_encounters_v1 as SE
+    left join (
+        select PA.sample_id,
+            case
+                when present then 'Positive'
+                when not present then 'Negetive'
+                when present is null then 'Inconclusive'
+            end as present
+        from shipping.hcov19_presence_absence_result_v1 PA
+        ) PA using (sample_id)
+    left join SG using (sample_id)
+order by
+    encountered desc
+)
+to ./data/id3c_scan_vaccine_data.csv csv header;"
