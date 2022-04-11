@@ -8,7 +8,6 @@ suppressPackageStartupMessages({
   library(tidyverse)
   library(cdcfluview)
   library(zoo)
-  library(finalfit)
 })
 
 "%notin%" <- Negate("%in%")
@@ -80,7 +79,7 @@ dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
     fully_boosted = ifelse(vaccination_status == "boosted", "yes",
       ifelse(vaccination_status == "fully_vaccinated", NA, "no")
     ),
-    vax_status = ifelse(vaccination_status == "not_vaccinated" | vaccination_status == "partially_vaccinated" | vaccination_status == "unknown", "not_fully", vaccination_status),
+    vax_status = ifelse(vaccination_status == "not_vaccinated" | vaccination_status == "partially_vaccinated" | vaccination_status == "unknown", "not_fully", as.character(vaccination_status)),
     vax_status = factor(vax_status, levels = c("not_fully", "fully_vaccinated", "boosted")),
     sex = factor(sex, levels = c("female", "male")),
     race_ethnicity_recode = factor(race_ethnicity,
@@ -354,7 +353,6 @@ mod1_dat <- mod1_dat %>% mutate(
   VE = round((1 - OR) * 100, 1),
   VE_lower = round((1 - upper) * 100, 1),
   VE_upper = round((1 - lower) * 100, 1),
-  label = round_tidy(VE, 1),
   doses = factor(doses, levels = c("3 Doses", "2 Doses <6m ago", "2 Doses >6m ago")),
   rel_risk = OR / (1 - p1 + (p1 * OR)),
   rel_risk = 1 / rel_risk
@@ -372,7 +370,6 @@ mod2_dat <- mod2_dat %>% mutate(
   VE = round((1 - OR) * 100, 1),
   VE_lower = round((1 - upper) * 100, 1),
   VE_upper = round((1 - lower) * 100, 1),
-  label = round_tidy(VE, 1),
   doses = factor(doses, levels = c("3 Doses", "2 Doses <6m ago", "2 Doses >6m ago")),
   rel_risk = OR / (1 - p2 + (p2 * OR)),
   rel_risk = 1 / rel_risk
@@ -388,7 +385,6 @@ mod3_dat <- mod3_dat %>% mutate(
   VE = round((1 - OR) * 100, 1),
   VE_lower = round((1 - upper) * 100, 1),
   VE_upper = round((1 - lower) * 100, 1),
-  label = round_tidy(VE, 1),
   doses = factor(doses, levels = c("3 Doses", "2 Doses <6m ago", "2 Doses >6m ago")),
   rel_risk = OR / (1 - p2 + (p2 * OR)),
   rel_risk = 1 / rel_risk
