@@ -300,7 +300,7 @@ screening_all <- screening_all %>%
 probability <- screening_all %>%
   select(week_date, risk_unvax, risk_fully, risk_boosted)
 
-write.csv(probability, "data/probability.csv", row.names = F)
+write.csv(probability, "data/infection_probability.csv", row.names = F)
 
 
 
