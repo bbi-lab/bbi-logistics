@@ -27,6 +27,8 @@ suppressPackageStartupMessages({
 other_vax <- c("astrazeneca", "dont_know", "dont_say", "novavax", "other")
 
 dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
+  mutate(encountered = as.Date(encountered))
+dat <- dat %>%
   filter(
     encountered >= "2021-01-20" &
       enrollment_method == "Community Enrollment" &
@@ -37,7 +39,6 @@ dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
     vac_name_1 %notin% other_vax, vac_name_2 %notin% other_vax, vac_name_3 %notin% other_vax
   ) %>%
   mutate(
-    encountered = as.Date(encountered),
     date_last_covid_dose = as.Date(date_last_covid_dose),
     mmwr_week(encountered),
     week_date = mmwr_week_to_date(mmwr_year, mmwr_week),
