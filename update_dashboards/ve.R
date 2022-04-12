@@ -36,7 +36,7 @@ dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
   filter(
     encountered >= "2021-01-20" &
       enrollment_method == "Community Enrollment" &
-      date_last_covid_dose <= encountered &
+      # date_last_covid_dose <= encountered &
       age >= 12 &
       # (date_last_covid_dose >= '2020-12-01'|date_last_covid_dose=="") &
       (region == "South King County" | region == "North King County"),
