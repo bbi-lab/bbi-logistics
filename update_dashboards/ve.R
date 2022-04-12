@@ -27,8 +27,6 @@ suppressPackageStartupMessages({
 other_vax <- c("astrazeneca", "dont_know", "dont_say", "novavax", "other")
 
 dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
-  mutate(encountered = as.Date(encountered))
-dat <- dat %>%
   filter(
     encountered >= "2021-01-20" &
       enrollment_method == "Community Enrollment" &
@@ -39,6 +37,7 @@ dat <- dat %>%
     vac_name_1 %notin% other_vax, vac_name_2 %notin% other_vax, vac_name_3 %notin% other_vax
   ) %>%
   mutate(
+    encountered = as.Date(encountered),
     date_last_covid_dose = as.Date(date_last_covid_dose),
     mmwr_week(encountered),
     week_date = mmwr_week_to_date(mmwr_year, mmwr_week),
@@ -68,19 +67,19 @@ dat <- dat %>%
     variant_indicator2 = factor(variant_indicator, levels = c("other", "delta", "omicron")),
     prior_infection = ifelse(grepl("yes", prior_test_positive), 1, 0),
     time_since_vax = as.numeric(difftime(encountered, date_last_covid_dose, units = "days")),
-    doses_recode = ifelse(covid_doses == "2" & (time_since_vax > 180 | is.na(time_since_vax)), "2_doses_>6m",
-      ifelse(covid_doses == "2" & time_since_vax <= 180, "2_doses_<6m", number_of_covid_doses)
+    doses_recode = ifelse(number_of_covid_doses == "2_doses" & (time_since_vax > 180 | is.na(time_since_vax)), "2_doses_>6m",
+      ifelse(number_of_covid_doses == "2_doses" & time_since_vax <= 180, "2_doses_<6m", number_of_covid_doses)
     ),
     doses_recode = factor(doses_recode, levels = c("unknown", "0_doses", "1_dose", "2_doses_>6m", "2_doses_<6m", "3_doses")),
     regression_doses = factor(doses_recode,
       levels = c("unknown", "0_doses", "1_dose", "2_doses_>6m", "2_doses_<6m", "3_doses"),
       labels = c("reference", "reference", "reference", "2_doses_>6m", "2_doses_<6m", "3_doses")
-    ), # combining unknownm, 0 and 1 doses
+    ), # combining unknown, 0 and 1 doses
     fully_vaccinated = ifelse(vaccination_status == "fully_vaccinated" | vaccination_status == "boosted", "yes", "no"), # includes boosted people
     fully_boosted = ifelse(vaccination_status == "boosted", "yes",
-      ifelse(vaccination_status == "fully_vaccinated", NA, "no")
+      ifelse(vaccination_status == "fully_vaccinated", "no", NA)
     ),
-    vax_status = ifelse(vaccination_status == "not_vaccinated" | vaccination_status == "partially_vaccinated" | vaccination_status == "unknown", "not_fully", as.character(vaccination_status)),
+    vax_status = ifelse(vaccination_status == "not_vaccinated" | vaccination_status == "partially_vaccinated" | vaccination_status == "unknown", "not_fully", vaccination_status),
     vax_status = factor(vax_status, levels = c("not_fully", "fully_vaccinated", "boosted")),
     sex = factor(sex, levels = c("female", "male")),
     race_ethnicity_recode = factor(race_ethnicity,
@@ -96,8 +95,7 @@ dat <- dat %>%
       )
     )
   ) %>%
-  filter(!is.na(case_control))
-
+  filter(!is.na(case_control), vaccination_status != "unknown")
 
 # SCAN participants by vaccine doses  --------------------------------
 
@@ -185,6 +183,7 @@ for (i in 14:nrow(screening_data)) {
   # Fit logistic regression
   model <- glm(y ~ 1 + offset(logit_ppv), data = screening_2, family = "binomial")
 
+
   # calculate VE estimates and confidence interval
   screening_data$ve[i] <- (1 - exp(coef(model))) * 100
   screening_data$ve_lower[i] <- (1 - exp(confint(model))[2]) * 100
@@ -236,13 +235,14 @@ screening_boost <- dat %>%
 
 # Calculate estimated VE and confidence intervals using the screening method - logistic regression version
 # starting estimates at end of October
-for (i in 47:nrow(screening_boost)) {
+for (i in 31:nrow(screening_boost)) {
   screeningb2 <- data.frame(
     cohort = c("group"),
     case = c(screening_boost$cases_boost[i]),
     vac = c(screening_boost$vax_cases_boost[i]),
     ppv = c(screening_boost$prop_vax_boost[i])
   )
+
   # Restructure dataset to fit model
   screening_boost2 <- screeningb2 %>%
     group_by(cohort, case, vac, ppv) %>%
@@ -253,6 +253,7 @@ for (i in 47:nrow(screening_boost)) {
 
   # Fit logistic regression
   model <- glm(y ~ 1 + offset(logit_ppv), data = screening_boost2, family = "binomial")
+
 
   # calculate VE estimates and confidence interval
   screening_boost$boost_ve[i] <- (1 - exp(coef(model))) * 100
@@ -298,10 +299,10 @@ screening_all <- screening_all %>%
 
 # save data for Tableau Tab 2 Plot 1
 probability <- screening_all %>%
-  select(week_date, risk_unvax, risk_fully, risk_boosted)
+  select(week_date, risk_unvax, risk_fully, risk_boosted) %>%
+  pivot_longer(!week_date, names_to = "Vaccination Status", values_to = "Risk")
 
 write.csv(probability, "data/infection_probability.csv", row.names = F)
-
 
 
 # save data for Tableau Tab 2 Plot 2
@@ -343,6 +344,7 @@ dat <- dat %>%
 p1 <- with(dat, prop.table(table(case_control_bin, regression_doses)))[2, 1]
 p2 <- with(dat %>% filter(encountered >= "2021-06-01", encountered <= "2022-01-31"), prop.table(table(delta_case, regression_doses)))[2, 1]
 p3 <- with(dat %>% filter(encountered >= "2021-12-12"), prop.table(table(omicron_case, regression_doses)))[2, 1]
+
 
 # All Variants
 mod1 <- glm(case_control_bin ~ regression_doses + week_num + incidence_indicator + alpha + delta + omicron + prior_infection + age_group + region + race_ethnicity_recode + sex, data = dat, family = "binomial")
