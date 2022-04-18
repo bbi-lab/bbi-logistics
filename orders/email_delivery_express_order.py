@@ -76,7 +76,7 @@ def most_recent_order_today():
         x, 'DeliveryExpressOrder%Y_%m_%d_%H_%M.csv'),
                reverse=True)
 
-    return path.join(data_dir, files[0]) if files[0] else None
+    return path.join(data_dir, files[0]) if files else None
 
 
 if __name__ == "__main__":
