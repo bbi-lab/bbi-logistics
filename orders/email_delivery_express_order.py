@@ -20,7 +20,7 @@ def send_email():
     msg = MIMEMultipart()
     subject_date = datetime.now().strftime('%m/%d')
     msg['To'] = environ.get("DE_RECEIVERS")
-    msg['From'] = environ.get("OUTLOOK_USERNAME")
+    msg['From'] = environ.get("DE_SENDER")
     msg['Cc'] = environ.get("DE_CC")
     msg['Date'] = formatdate(localtime=True)
     filename = most_recent_order_today()
@@ -56,8 +56,8 @@ def send_email():
     with SMTP(host='smtp.office365.com', port=587) as smtp:
         print(smtp.noop())
         smtp.starttls()
-        smtp.login(environ.get("OUTLOOK_USERNAME"),
-                   environ.get("OUTLOOK_PASSWORD"))
+        smtp.login(environ.get("DE_SENDER"),
+                   environ.get("DE_OUTLOOK_PASSWORD"))
         smtp.send_message(msg)
 
 
