@@ -3,34 +3,38 @@
 cd "$(dirname "$0")/.."
 
 PGSERVICE=seattleflu-production psql -c "\copy (
-with query as (select distinct on (sample.sample_id)
+select distinct on (sample.sample_id)
+    location.hierarchy::json ->> 'puma' as puma,
     sample.sample_id,
-    case
-        when sample.collected is null then (sample.created at time zone 'PDT')
-        else sample.collected::date
-    end as date_received,
+    sample.collected::date,
+    (sample.created at time zone 'MST')::date as created_date,
+    (sample.details ->> 'aliquot_date')::date as aliquot_date,
     sample.details ->> 'sample_origin' as origin,
-    PA.device,
-    PA.present
+    pa.tested,
+    HCOV19.present as COV19_OA_result
 from warehouse.sample
-    left join (
-        select pa.sample_id, pa.target_id,
-            pa.details ->> 'device' as device,
+left join (select distinct sample_id, true as tested
+    from warehouse.presence_absence
+    where details ->> 'device' = 'OpenArray') pa using (sample_id)
+left join (
+        select distinct on (pa.sample_id) pa.sample_id,
             case
                 when present then 'positive'
                 when not present then 'negative'
                 when present is null then 'inconclusive'
+                else 'no result'
             end as present
         from warehouse.presence_absence pa
         where target_id in (select T.target_id
                 from warehouse.target T
                 left join warehouse.organism O using (organism_id)
-                where O.lineage = 'Human_coronavirus.2019') 
-        and pa.details ->> 'device' = 'OpenArray') PA using (sample_id)
-where sample.details ->> 'sample_origin' in ('phskc_retro', 'sch_retro', 'hmc_retro', 'nwh_retro', 'uwmc_retro')
-order by sample_id desc)
-
-select * from query where
-date_received between '2018-01-01 00:00:00'::timestamp and CURRENT_DATE
+                where O.lineage = 'Human_coronavirus.2019')
+        and pa.details ->> 'device' = 'OpenArray'
+        order by sample_id, present) HCOV19 using (sample_id)
+left join warehouse.encounter_location using (encounter_id)
+left join warehouse.location using (location_id)
+where sample.details ->> 'sample_origin' in ('phskc_retro', 'sch_retro', 'hmc_retro', 'nwh_retro', 'uwmc_retro', 'scan')
+and (sample.details ->> 'aliquot_date')::date between '2019-01-01' AND current_date
+order by sample_id desc
 )
 to ./data/id3c_scan_residual_data.csv csv header;"
