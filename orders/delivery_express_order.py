@@ -29,7 +29,7 @@ def main():
     '''Gets orders from redcap and combine them in a csv file'''
     order_export = pd.DataFrame(columns=exportColumns, dtype='string')
 
-    for project in project_dict:  # (p for p in project_dict if p != 'Cascadia'):
+    for project in project_dict:  #(p for p in project_dict if p == 'AIRS'):
         print(f'Kit orders for {project}: ', end='')
         try:
             redcap_project = init_project(project)
@@ -153,8 +153,8 @@ def use_best_address(original_address, row, event=''):
         'Street Address', 'Apt Number', 'City', 'State', 'Zipcode'
     ]
     other_replace = [
-        'First Name', 'Last Name', 'Delivery Instructions', 'Email', 'Phone',
-        'Notification Pref', 'Record Id'
+        'First Name', 'Last Name', 'Email', 'Phone', 'Notification Pref',
+        'Record Id'
     ]
     record_index = row.name if not event else (row.name[0], event)
     original = original_address.filter(items=[record_index], axis=0)

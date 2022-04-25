@@ -1,4 +1,4 @@
 Record Id,First Name,Last Name,Phone,Email,Street Address,Apt Number,City,State,Zipcode,Order Date,Today Tomorrow,Delivery Instructions,Pickup Location,Project Name
-1,Conner,Morshal,(206) 223-1234,test@uwtest.org,666 66th Ave NE,123.0,Seattle,WA,98023.0,2022-03-16 00:00:00,1.0,,porch,AIRS
-2,Ron,Swanson,(200) 555-6666,test@uwtest.org,1 North Street,,Seattle,WA,98000.0,2022-03-16 00:00:00,1.0,,porch,AIRS
-3,Tom,Holland,(200) 555-6666,spiderman@uwtest.org,300 Paker Ave N,420.0,Seattle,WA,98000.0,3/16/2022,0.0,,stairs,AIRS
+1,Conner,Morshal,(206) 223-1234,test@uwtest.org,666 66th Ave NE,123.0,Seattle,WA,98023.0,2022-03-16 00:00:00,1.0,deliver to porch,porch,AIRS
+2,Ron,Swanson,(200) 555-6666,test@uwtest.org,1 North Street,,Seattle,WA,98000.0,2022-03-16 00:00:00,1.0,deliver to porch,porch,AIRS
+3,Tom,Holland,(200) 555-6666,spiderman@uwtest.org,300 Paker Ave N,420.0,Seattle,WA,98000.0,3/16/2022,0.0,front door,stairs,AIRS

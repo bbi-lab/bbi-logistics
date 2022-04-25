@@ -1,5 +1,0 @@
-Order Date,Record Id,First Name,Last Name,Email,Phone,Street Address,Apt Number,City,State,Zipcode,Today Tomorrow,Project Name
-2022-02-18,30,George,Washington,GW@fakeuw.edu,(555) 555-5555,1600 pennsylvania ave,OVAL OFFICE,richmond,WA,98101.0,0,CASCADIA_SEA
-2022-02-05,20001060,name,name,email@email.com,(555) 555-5555,1234 5th,,,,,1,Cascadia
-2022-03-14,0,,,,,4321 65th Ave NE,666.0,Seattle,WA,98115.0,0,CASCADIA_SEA
-2022-03-14,0,,,,,4321 65th Ave NE,666.0,Seattle,WA,98115.0,1,CASCADIA_SEA
