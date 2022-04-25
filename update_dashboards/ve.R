@@ -239,7 +239,7 @@ screening_boost <- dat %>%
 
 # Calculate estimated VE and confidence intervals using the screening method - logistic regression version
 # starting estimates at end of October
-for (i in 31:nrow(screening_boost)) {
+for (i in 47:nrow(screening_boost)) {
   screeningb2 <- data.frame(
     cohort = c("group"),
     case = c(screening_boost$cases_boost[i]),
