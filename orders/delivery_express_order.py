@@ -46,6 +46,8 @@ def main():
         project_orders = format_orders(project_orders, project)
         order_export = pd.concat([order_export, project_orders],
                                  ignore_index=True)
+    order_export['Apt Number'] = order_export['Apt Number'].apply(
+        lambda x: f' {x}' if not pd.isna(x) else pd.NA)
     export_orders(order_export)
     # TODO: import to DE
 
