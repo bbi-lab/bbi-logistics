@@ -79,6 +79,10 @@ def format_orders(project_orders, project):
     project_orders = format_id(project_orders, project)
     project_orders['Project Name'] = project_orders.apply(
         lambda row: assign_project(row, project), axis=1)
+    # Some rows were typed as a float64 (X.X) which caused issues with the
+    # import to delivery express.
+    project_orders['Today Tomorrow'] = pd.to_numeric(
+        project_orders['Today Tomorrow'], downcast='integer')
     # only use columns specified in the exportColumns
     project_orders = project_orders[project_orders.columns.intersection(
         exportColumns)]
