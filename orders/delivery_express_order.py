@@ -160,7 +160,7 @@ def use_best_address(original_address, row, event=''):
     ]
     other_replace = [
         'First Name', 'Last Name', 'Email', 'Phone', 'Notification Pref',
-        'Record Id'
+        'Record Id', 'Project Name'
     ]
     record_index = row.name if not event else (row.name[0], event)
     original = original_address.filter(items=[record_index], axis=0)
@@ -216,9 +216,9 @@ def assign_project(row, project):
         if row['Zipcode'] in zipcode_county_map['SCAN PIERCE']:
             return 'SCAN_PIERCE'
     if project == 'Cascadia':
-        if row['State'] == 'WA':
+        if row['Project Name'] == 2:
             return 'CASCADIA_SEA'
-        if row['State'] == 'OR':
+        if row['Project Name'] == 1:
             return 'CASCADIA_PDX'
     if project == "HCT":
         return "HCT"
