@@ -149,7 +149,8 @@ project_dict = {
         "ss_zipcode": "Zipcode 2",
         "participant_email": "Email",
         "participant_phone": "Phone",
-        "ss_pu_location": "Pickup Location"
+        "ss_pickup_location": "Pickup Location",
+        "study_region": "Project Name"
     },
     "AIRS": {
         "project_id": "1372",

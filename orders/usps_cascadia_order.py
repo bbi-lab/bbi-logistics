@@ -3,6 +3,7 @@
 from datetime import datetime
 import sys
 from os import path
+from tokenize import PseudoExtras
 import pandas as pd
 from delivery_express_order import init_project, get_redcap_orders
 import envdir
@@ -68,7 +69,7 @@ def main():
         if ship:
             # resupply entire house
             resupply_kits_needed = sum(kits_needed['resupply'].values())
-            orders = append_order(orders, 2, resupply_kits_needed, address)
+            orders = append_order(orders, 1, resupply_kits_needed, address)
 
     export_orders(orders)
 
@@ -82,7 +83,7 @@ def append_order(orders, sku, quantity, address):
     address['OrderID'] = generate_order_number(address, orders)
     address['Household ID'] = address.index[0][0]
     address['Project Name'] = 'Cascadia_SEA' if address[
-        'State'].values == 'WA' else 'Cascadia_PDX'
+        'Project Name'].values == '2' else 'Cascadia_PDX'
     return pd.concat([orders, address], join='inner', ignore_index=True)
 
 
@@ -93,7 +94,7 @@ def get_house_address(order_report, house_id):
 
 
 def generate_order_number(address, orders):
-    order_id = f'{datetime.now().strftime("%Y%m%d")}{address.index[0][0]}'
+    order_id = f'{datetime.now().strftime("%y%m%d")}{address.index[0][0]}'
     while order_id in orders['OrderID'].values:
         if (not order_id[len(order_id) - 1].isalpha()):
             order_id = order_id + 'a'
