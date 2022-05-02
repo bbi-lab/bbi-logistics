@@ -75,21 +75,24 @@ def main():
 
 
 def append_order(orders, sku, quantity, address):
-    if quantity > 20:  # seperate into other order becaues of max shippment size
+    if quantity > 20 and sku == 1:  # seperate replenishment kits into other order becaues of max shippment size
         orders = append_order(orders, sku, quantity - 20, address)
         quantity = 20
+    if quantity > 4 and sku == 3:  # seperate welcome kits into other order becaues of max shippment size
+        orders = append_order(orders, sku, quantity - 4, address)
+        quantity = 4
     address['SKU'] = sku
     address['Quantity'] = quantity
     address['OrderID'] = generate_order_number(address, orders)
     address['Household ID'] = address.index[0][0]
-    address['Project Name'] = 'Cascadia_SEA' if address[
-        'Project Name'].values == '2' else 'Cascadia_PDX'
     return pd.concat([orders, address], join='inner', ignore_index=True)
 
 
 def get_house_address(order_report, house_id):
     address = order_report.loc[[(house_id, '0_arm_1')]] \
         .query('redcap_repeat_instrument.isna()')
+    address['Project Name'] = 'Cascadia_SEA' if address[
+        'Project Name'].values == '2' else 'Cascadia_PDX'
     return address[address.columns.intersection(export_columns)]
 
 
