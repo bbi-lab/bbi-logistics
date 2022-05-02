@@ -92,7 +92,8 @@ def get_house_address(order_report, house_id):
     address = order_report.loc[[(house_id, '0_arm_1')]] \
         .query('redcap_repeat_instrument.isna()')
     address['Project Name'] = 'Cascadia_SEA' if address[
-        'Project Name'].values == '2' else 'Cascadia_PDX'
+        'Project Name'].values == 2 else 'Cascadia_PDX'
+    address['Zipcode'] = address['Zipcode'].astype(int)
     return address[address.columns.intersection(export_columns)]
 
 
