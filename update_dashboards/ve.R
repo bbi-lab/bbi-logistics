@@ -14,7 +14,7 @@ suppressPackageStartupMessages({
 
 "%notin%" <- Negate("%in%")
 
-setwd("C:\\Users\\Cooper Marshall\\code\\logistics")
+# setwd("data/id3c_scan_vaccine_data.csv")
 
 # Exclusion Criteria
 # Must be King County
@@ -172,7 +172,29 @@ boot_fully_v_not <- function(data, indices) {
   return(c(ve, rel_risk))
 }
 
-# make new function for boosted v not fully vaccinated
+# function to format results - for fully v not fully function
+boot_results_1 <- function(data, boot_data) {
+  screening_data <- data %>%
+    group_by(case_control, vax_status) %>%
+    tally() %>%
+    ungroup() %>%
+    pivot_wider(names_from = c(case_control, vax_status), values_from = n) %>%
+    replace(is.na(.), 0) %>%
+    mutate(
+      ppv = (case_fully_vaccinated + control_fully_vaccinated) / (rowSums(.)),
+      pcv = case_fully_vaccinated / (case_fully_vaccinated + case_not_fully),
+      ve = (1 - ((pcv / (1 - pcv)) * ((1 - ppv) / ppv))),
+      ve_lower = as.numeric(quantile(boot_data$t[, 1], .025)),
+      ve_upper = as.numeric(quantile(boot_data$t[, 1], .975)),
+      or = 1 - ve,
+      p = case_not_fully / (case_not_fully + control_not_fully),
+      rel_risk = 1 / (or / (1 - p + (p * or))),
+      rel_risk_lower = as.numeric(quantile(boot_data$t[, 2], .025)),
+      rel_risk_upper = as.numeric(quantile(boot_data$t[, 2], .975))
+    )
+}
+
+# make new function for boosted v fully vaccinated
 boot_boost_v_fully <- function(data, indices) {
   screening <- data[indices, ] %>%
     group_by(case_control, vax_status) %>%
@@ -193,33 +215,51 @@ boot_boost_v_fully <- function(data, indices) {
   return(c(ve, rel_risk))
 }
 
-# function to format results
-boot_results <- function(data) {
-  screening_data <- as.data.frame(cbind(
-    ve = mean(data$t[, 1]),
-    ve_lower = as.numeric(quantile(data$t[, 1], .025)),
-    ve_upper = as.numeric(quantile(data$t[, 1], .975)),
-    rel_risk = mean(data$t[, 2]),
-    rel_risk_lower = as.numeric(quantile(data$t[, 2], .025)),
-    rel_risk_upper = as.numeric(quantile(data$t[, 2], .975))
-  ))
+# function to format results - for boosted v fully function
+boot_results_2 <- function(data, boot_data) {
+  screening_data <- data %>%
+    group_by(case_control, vax_status) %>%
+    tally() %>%
+    ungroup() %>%
+    pivot_wider(names_from = c(case_control, vax_status), values_from = n) %>%
+    replace(is.na(.), 0) %>%
+    mutate(
+      ppv = (case_boosted + control_boosted) / (rowSums(.)),
+      pcv = case_boosted / (case_fully_vaccinated + case_boosted),
+      ve = (1 - ((pcv / (1 - pcv)) * ((1 - ppv) / ppv))),
+      ve_lower = as.numeric(quantile(boot_data$t[, 1], .025)),
+      ve_upper = as.numeric(quantile(boot_data$t[, 1], .975)),
+      or = 1 - ve,
+      p = case_fully_vaccinated / (case_fully_vaccinated + control_fully_vaccinated),
+      rel_risk = 1 / (or / (1 - p + (p * or))),
+      rel_risk_lower = as.numeric(quantile(boot_data$t[, 2], .025)),
+      rel_risk_upper = as.numeric(quantile(boot_data$t[, 2], .975))
+    )
 }
 
 # run function with bootstrapping for pre delta period
 boot_predelta <- boot(dat %>% filter(week_date >= "2021-04-01", !is.na(vax_status), variant_indicator == "pre_delta"), boot_fully_v_not, R = 1000)
-results_predelta <- boot_results(boot_predelta) %>% mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Pre-Delta")
+results_predelta <- boot_results_1(dat %>% filter(week_date >= "2021-04-01", !is.na(vax_status), variant_indicator == "pre_delta"), boot_predelta) %>%
+  mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Pre-Delta") %>%
+  select(comparison, period, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
 # run funtion with bootstrapping for delta period
 boot_delta <- boot(dat %>% filter(!is.na(vax_status), variant_indicator == "delta", vax_status != "boosted"), boot_fully_v_not, R = 1000)
-results_delta <- boot_results(boot_delta) %>% mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Delta")
+results_delta <- boot_results_1(dat %>% filter(!is.na(vax_status), variant_indicator == "delta", vax_status != "boosted"), boot_delta) %>%
+  mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Delta") %>%
+  select(comparison, period, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
 # run funtion with bootstrapping for omicron period
 boot_omicron <- boot(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "boosted"), boot_fully_v_not, R = 1000)
-results_omicron <- boot_results(boot_omicron) %>% mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Omicron")
+results_omicron <- boot_results_1(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "boosted"), boot_omicron) %>%
+  mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Omicron") %>%
+  select(comparison, period, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
-# run boosted v fully with bootstraps for omicron (function 2)
+# run boosted v fully with bootstraps for omicron - not this uses different functions
 boot_omicron.2 <- boot(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "not_fully"), boot_boost_v_fully, R = 1000)
-results_omicron.2 <- boot_results(boot_omicron.2) %>% mutate(comparison = "Boosted vs. Fully Vaccinated", period = "Omicron")
+results_omicron.2 <- boot_results_2(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "not_fully"), boot_omicron.2) %>%
+  mutate(comparison = "Boosted vs. Fully Vaccinated", period = "Omicron") %>%
+  select(comparison, period, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
 
 screening_data <- rbind(results_predelta, results_delta, results_omicron, results_omicron.2) %>%
@@ -255,7 +295,7 @@ write.csv(ve_sim, "data/ve_sim.csv", row.names = F)
 # There are three regression models
 
 # If we ever have bugs with the code we should make sure this web address hasn't changed
-case_data() <- read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv", show_col_types = F) %>%
+case_data <- read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv", show_col_types = F) %>%
   filter(state == "Washington", county == "King") %>%
   mutate(
     new_cases = cases - lag(cases, 1),
