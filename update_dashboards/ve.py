@@ -17,7 +17,7 @@ def main():
 
     sheets = [
         'Vaccine Doses', 'Vaccination Status', 'Infection Probability',
-        'VE Estimate', 'VE Scenario', 'VE Variant'
+        'Screening Method', 'VE Variant', 'VE Sim'
     ]
 
     for s in sheets:
