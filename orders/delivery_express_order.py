@@ -29,7 +29,7 @@ def main():
     '''Gets orders from redcap and combine them in a csv file'''
     order_export = pd.DataFrame(columns=exportColumns, dtype='string')
 
-    for project in project_dict:  #(p for p in project_dict if p == 'AIRS'):
+    for project in project_dict:  #(p for p in project_dict if p == 'Cascadia'):
         print(f'Kit orders for {project}: ', end='')
         try:
             redcap_project = init_project(project)
@@ -136,6 +136,7 @@ def format_longitudinal(project, orders):
                               axis=1)
 
     elif project == 'Cascadia':
+        orders['Record Id'] = orders['Record Id'].fillna(0).astype(int)
         original_address = orders[
             orders['redcap_repeat_instrument'] != 'symptom_survey']
         orders = orders[orders['redcap_repeat_instrument'] == 'symptom_survey'] \
@@ -176,7 +177,8 @@ def use_best_address(original_address, row, event=''):
             row[val] = original.iloc[0][val]
     for val in other_replace:
         try:
-            row[val] = original.iloc[0][val]
+            if not row[val] or str(row[val]) == 'nan':
+                row[val] = original.iloc[0][val]
         except KeyError:
             pass
     return row
