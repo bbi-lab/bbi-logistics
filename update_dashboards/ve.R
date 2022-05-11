@@ -267,29 +267,6 @@ screening_data <- rbind(results_predelta, results_delta, results_omicron, result
 
 write.csv(screening_data, "data/screening_method.csv", row.names = F)
 
-# Get Data For VE Demo ---------------------------------------------------
-
-df1 <- dat %>%
-  filter(week_date >= "2021-04-01", !is.na(vax_status), variant_indicator == "pre_delta") %>%
-  mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Pre-Delta")
-df2 <- dat %>%
-  filter(!is.na(vax_status), variant_indicator == "delta", vax_status != "boosted") %>%
-  mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Delta")
-df3 <- dat %>%
-  filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "boosted") %>%
-  mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Omicron")
-df4 <- dat %>%
-  filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "not_fully") %>%
-  mutate(comparison = "Boosted vs. Fully Vaccinated", period = "Omicron")
-
-ve_sim <- bind_rows(df1, df2, df3, df4) %>%
-  group_by(case_control, vax_status, comparison, period) %>%
-  tally() %>%
-  ungroup() %>%
-  pivot_wider(names_from = c(case_control, vax_status), values_from = n) %>%
-  replace(is.na(.), 0)
-
-write.csv(ve_sim, "data/ve_sim.csv", row.names = F)
 
 # Run models  -------------------------------------------------------------
 # There are three regression models
