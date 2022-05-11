@@ -17,46 +17,31 @@ import orders.cascadia_return as cr
 class TestCascadiaReturn(unittest.TestCase):
 
     def setUp(self):
-        redcap_project = de.init_project("Cascadia")
+        project = 'Cascadia'
+        redcap_project = de.init_project(project)
 
         mock_csv = path.join(path_root,
                              'tests/data/cascadia/cascadia_mock_report.csv')
         redcap_report = open(mock_csv, 'r', encoding='utf8')
         with patch('orders.delivery_express_order.Project._call_api',
                    return_value=(redcap_report.read(), '')):
-            redcap_orders = de.get_redcap_orders(redcap_project, "Cascadia")
+            redcap_orders = de.get_redcap_orders(redcap_project, project)
         redcap_report.close()
 
-        redcap_orders = de.get_redcap_orders(redcap_project, 'Cascadia')
-        redcap_orders = de.format_longitudinal('Cascadia', redcap_orders)
+        redcap_orders = de.format_longitudinal(project, redcap_orders)
+        redcap_orders['Project Name'] = redcap_orders.apply(
+            lambda row: de.assign_project(row, project), axis=1)
         self.redcap_orders = redcap_orders
+        print(redcap_orders)
 
     def test_api_connection(self):
         try:
-            cr.get_de_orders(self.redcap_orders.iloc[2])
+            self.redcap_orders.apply(cr.get_de_orders, axis=1)
         except BaseException as err:
             self.fail(f'failed api connection test: {err}')
 
     def test_cascadia_return(self):
-        redcap_project = de.init_project("Cascadia")
-
-        mock_csv = path.join(path_root,
-                             'tests/data/cascadia/cascadia_mock_report.csv')
-        redcap_report = open(mock_csv, 'r', encoding='utf8')
-        with patch('orders.delivery_express_order.Project._call_api',
-                   return_value=(redcap_report.read(), '')):
-            redcap_orders = de.get_redcap_orders(redcap_project, "Cascadia")
-        redcap_report.close()
-
-        redcap_orders = de.get_redcap_orders(redcap_project, 'Cascadia')
-        redcap_orders = de.format_longitudinal('Cascadia', redcap_orders)
-
-        order_num_map = {
-            "21": "DE543123",
-            "20001060": "DE565435",
-            "0": "DE565435",
-            "30": "DE123456"
-        }
+        order_num_map = {"10000060": "DE543123", "20002340": "DE565435"}
 
         class MockResponse:
 
@@ -73,7 +58,7 @@ class TestCascadiaReturn(unittest.TestCase):
                         'referenceNumber3': 'CASCADIA_PDX'
                     }, {
                         'orderId': order_num_map[f'{int(id)}'],
-                        'createdAt': '2022-03-14T06:54:19.7770043-07:00',
+                        'createdAt': '2022-05-11T06:54:19.7770043-07:00',
                         'referenceNumber1': int(id),
                         'referenceNumber3': 'CASCADIA_SEA'
                     }]
@@ -85,6 +70,7 @@ class TestCascadiaReturn(unittest.TestCase):
             redcap_orders['orderId'] = redcap_orders.dropna(
                 subset=['Record Id']).apply(cr.get_de_orders, axis=1)
 
+        print(redcap_orders)
         redcap_orders.dropna(subset=['Record Id']).apply(
             lambda x: self.assertEqual(order_num_map[f'{int(x["Record Id"])}'],
                                        x['orderId']),

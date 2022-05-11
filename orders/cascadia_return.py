@@ -14,15 +14,18 @@ envdir.open(path.join(base_dir, '.env/redcap'))
 
 
 def main():
-    redcap_project = init_project('Cascadia')
-    redcap_orders = get_redcap_orders(redcap_project, 'Cascadia')
-    redcap_orders = format_longitudinal('Cascadia', redcap_orders)
+    project = "Cascadia"
+    redcap_project = init_project(project)
+    redcap_orders = get_redcap_orders(redcap_project, project)
+    redcap_orders = format_longitudinal(project, redcap_orders)
+    redcap_orders['Project Name'] = redcap_orders.apply(
+        lambda row: assign_project(row, project), axis=1)
     redcap_orders['orderId'] = redcap_orders.dropna(
         subset=['Record Id']).apply(get_de_orders, axis=1)
 
     formatted_import = format_orders_import(redcap_orders)
-    print(formatted_import)
-    # cascadia_redcap.import_records([data], overwrite='overwrite')
+    # print(formatted_import)
+    # redcap_project.import_records([data], overwrite='overwrite')
 
 
 def get_de_orders(redcap_order: pd.Series):
@@ -46,7 +49,14 @@ def get_de_orders(redcap_order: pd.Series):
 
 def extract_data(redcap_order: pd.Series, de_orders: dict):
     for order in de_orders['items']:
-        if (order['referenceNumber1'] != redcap_order['Record Id']):
+        print(
+            f"DE record id: {order['referenceNumber1']} real record id: {redcap_order['Record Id']}"
+        )
+        if str(order['referenceNumber1']) != str(redcap_order['Record Id']):
+            print('Record Ids do not match')
+            continue
+        if not 'CASCADIA' in order['referenceNumber3']:
+            print('Project Names do not match')
             continue
         formatted_date = order['createdAt'][:25] + order['createdAt'][
             26:30] + order['createdAt'][31:]
@@ -72,5 +82,5 @@ def format_orders_import(orders):
 
 
 if __name__ == "__main__":
-    from delivery_express_order import init_project, get_redcap_orders, format_longitudinal
+    from delivery_express_order import init_project, get_redcap_orders, format_longitudinal, assign_project
     main()
