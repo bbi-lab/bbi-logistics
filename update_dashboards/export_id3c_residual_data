@@ -34,6 +34,7 @@ left join (
 left join warehouse.encounter_location using (encounter_id)
 left join warehouse.location using (location_id)
 where sample.details ->> 'sample_origin' in ('phskc_retro', 'sch_retro', 'hmc_retro', 'nwh_retro', 'uwmc_retro', 'scan')
+and ((sample.details ->> 'sample_origin' = 'scan' and substring(location.hierarchy::json ->> 'puma',3,3) = '116') or sample.details ->> 'sample_origin' != 'scan')
 and (sample.details ->> 'aliquot_date')::date between '2019-01-01' AND current_date
 order by sample_id desc
 )
