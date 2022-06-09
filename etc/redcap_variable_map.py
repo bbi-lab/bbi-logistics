@@ -17,7 +17,9 @@ project_dict = {
         "email": "Email",
         "phone_number": "Phone",
         "text_or_email": "Notification Pref",
-        "return_special_instruct": "Pickup Location"
+        "return_special_instruct": "Pickup Location",
+        "pre_scan_barcode": "Collection",
+        "back_end_scan": "BEMS",
     },
     "SCAN Spanish": {
         "project_id": "22475",
@@ -37,7 +39,9 @@ project_dict = {
         "email": "Email",
         "phone_number": "Phone",
         "text_or_email": "Notification Pref",
-        "return_special_instruct": "Pickup Location"
+        "return_special_instruct": "Pickup Location",
+        "pre_scan_barcode": "Collection",
+        "back_end_scan": "BEMS",
     },
     "SCAN Russian": {
         "project_id": "22472",
@@ -57,7 +61,9 @@ project_dict = {
         "email": "Email",
         "phone_number": "Phone",
         "text_or_email": "Notification Pref",
-        "return_special_instruct": "Pickup Location"
+        "return_special_instruct": "Pickup Location",
+        "pre_scan_barcode": "Collection",
+        "back_end_scan": "BEMS",
     },
     "SCAN Vietnamese": {
         "project_id": "22477",
@@ -77,7 +83,9 @@ project_dict = {
         "email": "Email",
         "phone_number": "Phone",
         "text_or_email": "Notification Pref",
-        "return_special_instruct": "Pickup Location"
+        "return_special_instruct": "Pickup Location",
+        "pre_scan_barcode": "Collection",
+        "back_end_scan": "BEMS",
     },
     "SCAN Trad Chinese": {
         "project_id": "22474",
@@ -97,7 +105,9 @@ project_dict = {
         "email": "Email",
         "phone_number": "Phone",
         "text_or_email": "Notification Pref",
-        "return_special_instruct": "Pickup Location"
+        "return_special_instruct": "Pickup Location",
+        "pre_scan_barcode": "Collection",
+        "back_end_scan": "BEMS",
     },
     "HCT": {
         "project_id": "45",
@@ -123,11 +133,13 @@ project_dict = {
         "email": "Email",
         "phone_number": "Phone",
         "text_or_email": "Notification Pref",
-        "return_special_instruct": "Pickup Location"
+        "return_special_instruct": "Pickup Location",
+        "pre_scan_barcode": "Collection",
+        "back_end_scan": "BEMS",
     },
     "Cascadia": {
-        "project_id": "46238",
-        "Report Id": "144242",
+        "project_id": "109",
+        "Report Id": "1141",
         "project_type": "longitudinal",
         "ptid": "Record Id",
         "household_id": "Household ID",
@@ -153,7 +165,9 @@ project_dict = {
         "participant_email": "Email",
         "participant_phone": "Phone",
         "ss_pickup_location": "Pickup Location",
-        "study_region": "Project Name"
+        "study_region": "Project Name",
+        "pre_scan_barcode": "Collection",
+        "back_end_scan": "BEMS",
     },
     "AIRS": {
         "project_id": "1372",
@@ -187,6 +201,8 @@ project_dict = {
         "ss_state": "State 3",
         "ss_mail_zip": "Zipcode 3",
         "ss_del_instr": "Delivery Instructions 2",
-        "ss_ret_kit_where": "Pickup Location 2"
+        "ss_ret_kit_where": "Pickup Location 2",
+        "pre_scan_barcode": "Collection",
+        "back_end_scan": "BEMS",
     }
 }

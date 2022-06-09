@@ -3,7 +3,6 @@
 from datetime import datetime
 import sys
 from os import path
-from tokenize import PseudoExtras
 import pandas as pd
 from delivery_express_order import init_project, get_redcap_orders
 import envdir
@@ -21,7 +20,7 @@ export_columns = [
 
 def main():
     project = init_project('Cascadia')
-    order_report = get_redcap_orders(project, 'Cascadia', '144246')
+    order_report = get_redcap_orders(project, 'Cascadia', '1144')
 
     barcode_columns = [f'assign_barcode_{i}' for i in range(1, 10)]
 
@@ -62,7 +61,10 @@ def main():
         if kits_needed['welcome'] or ship:
             address = get_house_address(order_report, house_id)
 
-        if kits_needed['welcome']:
+        # do not send welcome kits unless everyone has completed the enrollment survey
+        if kits_needed['welcome'] and not any(
+                order_report.loc[[house_id],
+                                 'enrollment_survey_complete'] == 0):
             welcome_kits_needed = sum(kits_needed['welcome'].values())
             orders = append_order(orders, 3, welcome_kits_needed, address)
 
@@ -93,7 +95,8 @@ def get_house_address(order_report, house_id):
         .query('redcap_repeat_instrument.isna()')
     address['Project Name'] = 'Cascadia_SEA' if address[
         'Project Name'].values == 2 else 'Cascadia_PDX'
-    address['Zipcode'] = address['Zipcode'].astype(int)
+    address['Zipcode'] = address['Zipcode'].astype(int) if not pd.isna(
+        address['Zipcode'].values) else ''
     return address[address.columns.intersection(export_columns)]
 
 
@@ -103,8 +106,9 @@ def generate_order_number(address, orders):
         if (not order_id[len(order_id) - 1].isalpha()):
             order_id = order_id + 'a'
         else:
-            order_id[len(order_id) -
-                     1] = chr(ord(order_id[len(order_id) - 1]) + 1)
+            l = list(order_id)
+            l[len(l) - 1] = chr(ord(l[len(l) - 1]) + 1)
+            order_id = ''.join(l)
     return order_id
 
 

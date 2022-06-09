@@ -31,14 +31,14 @@ def main():
 
     for project in project_dict:  #(p for p in project_dict if p == 'Cascadia'):
         print(f'Kit orders for {project}: ', end='')
-        try:
-            redcap_project = init_project(project)
-            project_orders = get_redcap_orders(redcap_project, project)
-        except Exception as err:
-            print('Error!')
-            with open(path.join(base_dir, 'data/err.txt'), 'a') as log:
-                log.write(repr(err))
-            continue
+        # try:
+        redcap_project = init_project(project)
+        project_orders = get_redcap_orders(redcap_project, project)
+        # except Exception as err:
+        #     print('Error!')
+        #     with open(path.join(base_dir, 'data/err.txt'), 'a') as log:
+        #         log.write(repr(err))
+        #     continue
         orders = len(project_orders.index.get_level_values(0).unique())
         print(orders)
         if orders < 1:
@@ -54,7 +54,7 @@ def main():
 
 def init_project(project):
     '''Fetch content of order reports for a given project'''
-    if project == "HCT":
+    if project in ["HCT", "Cascadia"]:
         url = urlparse(environ.get("HCT_REDCAP_API_URL"))
     elif project == "AIRS":
         url = urlparse(environ.get("AIRS_REDCAP_API_URL"))
