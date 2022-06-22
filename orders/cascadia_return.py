@@ -24,8 +24,7 @@ def main():
         subset=['Record Id']).apply(get_de_orders, axis=1)
 
     formatted_import = format_orders_import(redcap_orders)
-    # print(formatted_import)
-    # redcap_project.import_records([data], overwrite='overwrite')
+    redcap_project.import_records(formatted_import, overwrite='overwrite')
 
 
 def get_de_orders(redcap_order: pd.Series):
