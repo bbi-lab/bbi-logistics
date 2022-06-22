@@ -17,7 +17,7 @@ def main():
     project = "Cascadia"
     redcap_project = init_project(project)
     redcap_orders = get_redcap_orders(redcap_project, project)
-    if len(redcap_orders == 0):
+    if len(redcap_orders) == 0:
         print('no orders')
         return
     redcap_orders = format_longitudinal(project, redcap_orders)
