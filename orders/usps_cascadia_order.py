@@ -21,6 +21,8 @@ export_columns = [
 def main():
     project = init_project('Cascadia')
     order_report = get_redcap_orders(project, 'Cascadia', '1144')
+    serial_report = get_redcap_orders(project, 'Cascadia', '1711')
+    serial_pts = serial_report['results_ptid'] if len(serial_report) else []
 
     barcode_columns = [f'assign_barcode_{i}' for i in range(1, 10)]
 
@@ -31,7 +33,8 @@ def main():
         ship = False
         kits_needed = {
             'resupply': {},  # {"0": 2, "1": 1, "3": 4}
-            'welcome': {}  # {"2": 1}
+            'welcome': {},  # {"2": 1}
+            'serial': {}  # {"6": 1}
         }
 
         participants = set(i[1] for i in order_report.index
@@ -58,7 +61,10 @@ def main():
             # number of kits needed to get inventory to 6
             kits_needed['resupply'][participant] = max(6 - num_kits, 0)
 
-        if kits_needed['welcome'] or ship:
+            if pt_data['es_ptid'] in serial_pts:
+                kits_needed['serial'][participant] = 1
+
+        if kits_needed['welcome'] or ship or kits_needed['serial']:
             address = get_house_address(order_report, house_id)
 
         # do not send welcome kits unless everyone has completed the enrollment survey
@@ -72,6 +78,10 @@ def main():
             # resupply entire house
             resupply_kits_needed = sum(kits_needed['resupply'].values())
             orders = append_order(orders, 1, resupply_kits_needed, address)
+
+        if kits_needed['serial']:
+            for pt, _ in kits_needed['serial'].items():
+                orders = append_order(orders, 2, 1, address)
 
     export_orders(orders)
 
