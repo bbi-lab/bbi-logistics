@@ -60,10 +60,10 @@ def extract_data(redcap_order: pd.Series, de_orders: dict):
         if not 'CASCADIA' in order['referenceNumber3']:
             print('Project Names do not match')
             continue
-        formatted_date = order['createdAt'][:25] + order['createdAt'][
-            26:30] + order['createdAt'][31:]
-        created_date = dt.strptime(
-            formatted_date, '%Y-%m-%dT%H:%M:%S.%f%z').replace(tzinfo=None)
+        formatted_date = order['createdAt'][:19] + order['createdAt'][
+            -6:].replace(':', '')
+        created_date = dt.strptime(formatted_date,
+                                   '%Y-%m-%dT%H:%M:%S%z').replace(tzinfo=None)
         order_date = redcap_order['Order Date']
         print(f'{created_date.date()}  |  {order_date.date()}')
         if (created_date > order_date):
