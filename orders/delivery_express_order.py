@@ -146,6 +146,7 @@ def format_longitudinal(project, orders):
         orders['Today Tomorrow'] = orders.apply(lambda x: 0
                                                 if x['Pickup 1'] == 1 else 1,
                                                 axis=1)
+        orders['Notification Pref'] = 'email'
     return orders
 
 

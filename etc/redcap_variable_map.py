@@ -162,7 +162,7 @@ project_dict = {
         "ss_city": "City 2",
         "ss_state": "State 2",
         "ss_zipcode": "Zipcode 2",
-        "participant_email": "Email",
+        "alerts_email": "Email",
         "participant_phone": "Phone",
         "ss_pickup_location": "Pickup Location",
         "study_region": "Project Name",
