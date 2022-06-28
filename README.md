@@ -1,6 +1,10 @@
 # Logistics
 Operational automation and dashboard updates for Brotman Baty Institute Logistics
 
+## Order script documentation
+[Delivery Express](orders/DE_ORDER_README.md)
+[USPS](orders/USPS_ORDER_README.md)
+
 ## Usage
 ```
 python3 orders/delivery_express_order.py
