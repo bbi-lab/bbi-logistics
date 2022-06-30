@@ -26,12 +26,12 @@ This version control for this website is hosted at github.com/cooperqmarshall/ki
 dashboard|permissions|data source|query|host|update method|schedule|notes
 -|-|-|-|-|-|-|-
 Internal SCAN Stakeholder Dashboard|BBI|ID3C|[681](https://backoffice.seattleflu.org/metabase/question/681-scan-internal-dashboard-query)|Tableau Server|Data Extract|Daily|The first dashboard built!
-External SCAN Stakeholder Dashboard|BBI, GV|Google sheets|[753](https://backoffice.seattleflu.org/metabase/question/753-scan-stakeholder-query)|Tableau Server|[`update_dashboards/stakeholder.py`](update_dashboards/stakeholder.py)|Daily|
+External SCAN Stakeholder Dashboard|BBI, GV|Google sheets|[753](https://backoffice.seattleflu.org/metabase/question/753-scan-stakeholder-query)|Tableau Server|[`update_dashboards/stakeholder.py`](stakeholder.py)|Daily|
 Internal Residuals Dashbaord|BBI|ID3C|[880](https://backoffice.seattleflu.org/metabase/question/880-new-retrospective-samples-query)|Tableau Server|Data Extract|
-External Residuals Dashboard|BBI, GV|Google Sheets|[904](https://backoffice.seattleflu.org/metabase/question/904-external-residuals-query)|Tableau Server|[`update_dashboards/residual.py`](update_dashboards/residual.py)|Daily|
-Logistics Dashboard|BBI|Google Sheets, REDCap, Delivery Express||Tableau Server|[`update_dashboards/courier.py`](update_dashboards/courier.py) [`update_dashboards/kits_shipped.py`](update_dashboards/kits_shipped.py) [`update_dashboards/pc.py`](update_dashboards/pc.py)|Daily|Most data sources!
-Vaccine Effectiveness Dashboard|BBI, Public|Google Sheets|[869](https://backoffice.seattleflu.org/metabase/question/869-ve-dashboard-query)|Tableau Public|[`update_dashboards/ve.R`](update_dashboards/ve.R)|On demand|Most complex data processing!
-TPCHD SCAN Dashboard|BBI TPCHD|Google Sheets||Tableau Server|[`update_dashboards/tpchd.py`](update_dashboards/tpchd.py)|Weekly|
+External Residuals Dashboard|BBI, GV|Google Sheets|[904](https://backoffice.seattleflu.org/metabase/question/904-external-residuals-query)|Tableau Server|[`update_dashboards/residual.py`](residual.py)|Daily|
+Logistics Dashboard|BBI|Google Sheets, REDCap, Delivery Express||Tableau Server|[`update_dashboards/courier.py`](courier.py) [`update_dashboards/kits_shipped.py`](kits_shipped.py) [`update_dashboards/pc.py`](pc.py)|Daily|Most data sources!
+Vaccine Effectiveness Dashboard|BBI, Public|Google Sheets|[869](https://backoffice.seattleflu.org/metabase/question/869-ve-dashboard-query)|Tableau Public|[`update_dashboards/ve.R`](ve.R)|On demand|Most complex data processing!
+TPCHD SCAN Dashboard|BBI TPCHD|Google Sheets||Tableau Server|[`update_dashboards/tpchd.py`](tpchd.py)|Weekly|
 Open Array Dashboard|BBI|ID3C|[898](https://backoffice.seattleflu.org/metabase/question/898-oa-dashboard-query-collected-accessioned)|Tableau Server|Data Extract|Daily|
 
 ### Notes:
