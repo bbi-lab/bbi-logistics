@@ -22,6 +22,7 @@ Using google sheets in this manner required a set of ETL python scripts to be de
 When the tableau.brotmanbaty.org site was used as the main point of interaction, there was often confusion in locating the dashboards because the URLs would change when updating the name of the workbook or dashboard tabs. Because of this, a simple static website was developed that embedded the dashboards in their own web pages. This allowed the dashboards to be updated and the URLs to remain the same. The dashboards still require a login to access.
 
 This version control for this website is hosted at github.com/cooperqmarshall/kittrack. The website itself is associated with the kittrack@uw.edu account as part of the ovid server cluster. You can read more about it [here](https://itconnect.uw.edu/connect/web-publishing/shared-hosting/web-development-environments/ovid-u-washington-edu/).
+> to connect use `ssh kittrack@ovid.u.washington.edu`
 
 dashboard|permissions|data source|query|host|update method|schedule|notes
 -|-|-|-|-|-|-|-
