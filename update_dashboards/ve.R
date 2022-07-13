@@ -8,13 +8,13 @@ suppressPackageStartupMessages({
   library(tidyverse)
   library(cdcfluview)
   library(zoo)
-  # library(finalfit)
   library(boot)
+  library(epitools)
 })
 
 "%notin%" <- Negate("%in%")
 
-# setwd("data/id3c_scan_vaccine_data.csv")
+# setwd("C:\\Users\\Cooper Marshall\\code\\logistics")
 
 # Exclusion Criteria
 # Must be King County
@@ -61,15 +61,19 @@ dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
     ), levels = c("pre_delta", "delta", "omicron")),
     prior_infection = ifelse(grepl("yes", prior_test_positive), 1, 0),
     time_since_vax = as.numeric(difftime(encountered, date_last_covid_dose, units = "days")),
-    doses_recode = ifelse(number_of_covid_doses == "2_doses" & (time_since_vax > 180 | is.na(time_since_vax)), "2_doses_>6m",
-      ifelse(number_of_covid_doses == "2_doses" & time_since_vax <= 180, "2_doses_<6m", number_of_covid_doses)
+    doses_recode = ifelse(covid_doses == "2" & (time_since_vax > 180 | is.na(time_since_vax)), "2_doses_>6m",
+      ifelse(covid_doses == "2" & time_since_vax <= 180, "2_doses_<6m",
+        ifelse(covid_doses == "1", "1_dose",
+          ifelse(covid_doses == "", "unknown", paste(covid_doses, "_doses", sep = ""))
+        )
+      )
     ),
     doses_recode = factor(doses_recode, levels = c("unknown", "0_doses", "1_dose", "2_doses_>6m", "2_doses_<6m", "3_doses")),
     regression_doses = factor(doses_recode,
       levels = c("unknown", "0_doses", "1_dose", "2_doses_>6m", "2_doses_<6m", "3_doses"),
       labels = c("reference", "reference", "reference", "2_doses_>6m", "2_doses_<6m", "3_doses")
     ), # combining unknown, 0 and 1 doses
-    vax_status = ifelse(vaccination_status == "not_vaccinated" | vaccination_status == "partially_vaccinated" | vaccination_status == "unknown", "not_fully", vaccination_status),
+    vax_status = ifelse(vaccination_status == "not_vaccinated" | vaccination_status == "partially_vaccinated" | vaccination_status == "unknown" | vaccination_status == "na" | vaccination_status == "invalid", "not_fully", vaccination_status),
     vax_status = factor(vax_status, levels = c("not_fully", "fully_vaccinated", "boosted")),
     sex = factor(sex, levels = c("female", "male")),
     race_ethnicity_recode = factor(race_ethnicity,
@@ -85,7 +89,9 @@ dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
       )
     )
   ) %>%
-  filter(!is.na(case_control), vaccination_status != "unknown")
+  filter(!is.na(case_control), vaccination_status != "unknown", vaccination_status != "na", vaccination_status != "invalid")
+
+# write.csv(dat, "data/dat.csv")
 
 # SCAN participants by vaccine doses  --------------------------------
 
@@ -182,7 +188,9 @@ boot_results_1 <- function(data, boot_data) {
     replace(is.na(.), 0) %>%
     mutate(
       ppv = (case_fully_vaccinated + control_fully_vaccinated) / (rowSums(.)),
+      ppuv = 1 - ppv,
       pcv = case_fully_vaccinated / (case_fully_vaccinated + case_not_fully),
+      pcuv = 1 - pcv,
       ve = (1 - ((pcv / (1 - pcv)) * ((1 - ppv) / ppv))),
       ve_lower = as.numeric(quantile(boot_data$t[, 1], .025)),
       ve_upper = as.numeric(quantile(boot_data$t[, 1], .975)),
@@ -225,7 +233,9 @@ boot_results_2 <- function(data, boot_data) {
     replace(is.na(.), 0) %>%
     mutate(
       ppv = (case_boosted + control_boosted) / (rowSums(.)),
+      ppuv = 1 - ppv,
       pcv = case_boosted / (case_fully_vaccinated + case_boosted),
+      pcuv = 1 - pcv,
       ve = (1 - ((pcv / (1 - pcv)) * ((1 - ppv) / ppv))),
       ve_lower = as.numeric(quantile(boot_data$t[, 1], .025)),
       ve_upper = as.numeric(quantile(boot_data$t[, 1], .975)),
@@ -241,25 +251,25 @@ boot_results_2 <- function(data, boot_data) {
 boot_predelta <- boot(dat %>% filter(week_date >= "2021-04-01", !is.na(vax_status), variant_indicator == "pre_delta"), boot_fully_v_not, R = 1000)
 results_predelta <- boot_results_1(dat %>% filter(week_date >= "2021-04-01", !is.na(vax_status), variant_indicator == "pre_delta"), boot_predelta) %>%
   mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Pre-Delta") %>%
-  select(comparison, period, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
+  select(comparison, period, ppv, ppuv, pcv, pcuv, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
 # run funtion with bootstrapping for delta period
 boot_delta <- boot(dat %>% filter(!is.na(vax_status), variant_indicator == "delta", vax_status != "boosted"), boot_fully_v_not, R = 1000)
 results_delta <- boot_results_1(dat %>% filter(!is.na(vax_status), variant_indicator == "delta", vax_status != "boosted"), boot_delta) %>%
   mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Delta") %>%
-  select(comparison, period, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
+  select(comparison, period, ppv, ppuv, pcv, pcuv, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
 # run funtion with bootstrapping for omicron period
 boot_omicron <- boot(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "boosted"), boot_fully_v_not, R = 1000)
 results_omicron <- boot_results_1(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "boosted"), boot_omicron) %>%
   mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Omicron") %>%
-  select(comparison, period, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
+  select(comparison, period, ppv, ppuv, pcv, pcuv, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
 # run boosted v fully with bootstraps for omicron - not this uses different functions
 boot_omicron.2 <- boot(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "not_fully"), boot_boost_v_fully, R = 1000)
 results_omicron.2 <- boot_results_2(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "not_fully"), boot_omicron.2) %>%
   mutate(comparison = "Boosted vs. Fully Vaccinated", period = "Omicron") %>%
-  select(comparison, period, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
+  select(comparison, period, ppv, ppuv, pcv, pcuv, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
 
 screening_data <- rbind(results_predelta, results_delta, results_omicron, results_omicron.2) %>%
@@ -288,17 +298,11 @@ case_data <- read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/m
 dat <- dat %>%
   left_join(case_data, by = "week_date")
 
-# get probabilities for OR - relative risk conversion
-p1 <- with(dat, table(case_control_bin, regression_doses))
-p1 <- p1[2, 1] / (p1[2, 1] + p1[1 / 1])
-p2 <- with(dat %>% filter(encountered >= "2021-06-01", encountered <= "2022-01-31"), table(delta_case, regression_doses))
-p2 <- p2[2, 1] / (p2[2, 1] + p2[1 / 1])
-p3 <- with(dat %>% filter(encountered >= "2021-12-12"), table(omicron_case, regression_doses))
-p3 <- p3[2, 1] / (p3[2, 1] + p3[1 / 1])
 
 
 # All Variants
 mod1 <- glm(case_control_bin ~ regression_doses + week_num + incidence_indicator + alpha + delta + omicron + prior_infection + age_group + region + race_ethnicity_recode + sex, data = dat, family = "binomial")
+mod1_rr <- data.frame(RR = (1 / exp(probratio(mod1, scale = "log", method = "delta")))[1:3, 1])
 mod1_dat <- as.data.frame(exp(cbind(coef(mod1), confint(mod1))))[2:4, ]
 names(mod1_dat) <- c("OR", "lower", "upper")
 mod1_dat$doses <- c("2 Doses >6m ago", "2 Doses <6m ago", "3 Doses")
@@ -307,15 +311,15 @@ mod1_dat <- mod1_dat %>% mutate(
   VE = round((1 - OR) * 100, 1),
   VE_lower = round((1 - upper) * 100, 1),
   VE_upper = round((1 - lower) * 100, 1),
-  doses = factor(doses, levels = c("3 Doses", "2 Doses <6m ago", "2 Doses >6m ago")),
-  rel_risk = OR / (1 - p1 + (p1 * OR)),
-  rel_risk = 1 / rel_risk
+  doses = factor(doses, levels = c("3 Doses", "2 Doses <6m ago", "2 Doses >6m ago"))
 )
+mod1_dat <- cbind(mod1_dat, mod1_rr)
 
-
+test <- dat %>% filter(encountered >= "2021-06-01", encountered <= "2022-01-31")
 
 # Delta Specific
 mod2 <- glm(delta_case ~ regression_doses + week_num + prior_infection + incidence_indicator + age_group + region + race_ethnicity_recode + sex, data = dat %>% filter(encountered >= "2021-06-01", encountered <= "2022-01-31"), family = "binomial")
+mod2_rr <- data.frame(RR = (1 / exp(probratio(mod2, scale = "log", method = "delta")))[1:3, 1])
 mod2_dat <- as.data.frame(exp(cbind(coef(mod2), confint(mod2))))[2:4, ]
 names(mod2_dat) <- c("OR", "lower", "upper")
 mod2_dat$doses <- c("2 Doses >6m ago", "2 Doses <6m ago", "3 Doses")
@@ -324,13 +328,14 @@ mod2_dat <- mod2_dat %>% mutate(
   VE = round((1 - OR) * 100, 1),
   VE_lower = round((1 - upper) * 100, 1),
   VE_upper = round((1 - lower) * 100, 1),
-  doses = factor(doses, levels = c("3 Doses", "2 Doses <6m ago", "2 Doses >6m ago")),
-  rel_risk = OR / (1 - p2 + (p2 * OR)),
-  rel_risk = 1 / rel_risk
+  doses = factor(doses, levels = c("3 Doses", "2 Doses <6m ago", "2 Doses >6m ago"))
 )
+mod2_dat <- cbind(mod2_dat, mod2_rr)
+
 
 # Omicron Specific
 mod3 <- glm(omicron_case ~ regression_doses + week_num + incidence_indicator + age_group + region + race_ethnicity_recode + sex, data = dat %>% filter(encountered >= "2021-12-12", prior_infection == 0), family = "binomial")
+mod3_rr <- data.frame(RR = (1 / exp(probratio(mod3, scale = "log", method = "delta")))[1:3, 1])
 mod3_dat <- as.data.frame(exp(cbind(coef(mod3), confint(mod3))))[2:4, ]
 names(mod3_dat) <- c("OR", "lower", "upper")
 mod3_dat$doses <- c("2 Doses >6m ago", "2 Doses <6m ago", "3 Doses")
@@ -339,11 +344,9 @@ mod3_dat <- mod3_dat %>% mutate(
   VE = round((1 - OR) * 100, 1),
   VE_lower = round((1 - upper) * 100, 1),
   VE_upper = round((1 - lower) * 100, 1),
-  doses = factor(doses, levels = c("3 Doses", "2 Doses <6m ago", "2 Doses >6m ago")),
-  rel_risk = OR / (1 - p2 + (p2 * OR)),
-  rel_risk = 1 / rel_risk
+  doses = factor(doses, levels = c("3 Doses", "2 Doses <6m ago", "2 Doses >6m ago"))
 )
-
+mod3_dat <- cbind(mod3_dat, mod3_rr)
 
 
 # combine datasets
@@ -352,7 +355,7 @@ mod3_dat <- mod3_dat %>% mutate(
 VE_dat <- rbind(mod1_dat, mod2_dat, mod3_dat) %>%
   mutate(range = VE_upper - VE_lower) %>%
   filter(range < 80) %>%
-  select(doses, variant, VE_lower, VE, VE_upper, rel_risk) %>%
+  select(doses, variant, VE_lower, VE, VE_upper, RR) %>%
   mutate(VE_lower = ifelse(VE_lower < 0, 0, VE_lower))
 
 
