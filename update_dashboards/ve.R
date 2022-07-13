@@ -15,7 +15,7 @@ suppressPackageStartupMessages({
 "%notin%" <- Negate("%in%")
 
 # setwd("C:\\Users\\Cooper Marshall\\code\\logistics")
-
+# setwd("C:/Users/hansencl/Desktop/VE dashboard final")
 # Exclusion Criteria
 # Must be King County
 # Must be Community Enrollment
@@ -26,9 +26,14 @@ suppressPackageStartupMessages({
 
 # Prep Data ------------------------------------------------------
 other_vax <- c("astrazeneca", "dont_know", "dont_say", "novavax", "other")
-
 dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
-  # dat <- read.csv("ve_dashboard_query_2022-04-26T14_23_37.354569-07_00.csv") %>%
+  # dat <- read.csv("ve_dashboard_with_raw_crts_2022-07-13T05_53_07.631427-07_00.csv") %>%
+  mutate(
+    s_gene_crt_1 = as.numeric(s_gene_crt_1),
+    s_gene_crt_2 = as.numeric(s_gene_crt_2),
+    orf1b_crt_1 = as.numeric(orf1b_crt_1),
+    orf1b_crt_2 = as.numeric(orf1b_crt_2)
+  ) %>%
   filter(
     encountered >= "2021-01-20" &
       enrollment_method == "Community Enrollment" &
@@ -47,22 +52,21 @@ dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
     case_control_bin = ifelse(hcov19_result == "Positive" | hcov19_result == "Inconclusive", 1,
       ifelse(hcov19_result == "Negetive", 0, NA)
     ),
-    delta_case = ifelse(case_control_bin == 1 & s_gene == "S gene negative", 1,
-      ifelse(case_control_bin == 0, 0, NA)
-    ),
-    omicron_case = ifelse(case_control_bin == 1 & s_gene == "S gene positive" & encountered >= "2021-10-01", 1,
-      ifelse(case_control_bin == 0, 0, NA)
-    ),
+    s_mean = rowMeans(.[, c("s_gene_crt_1", "s_gene_crt_2")], na.rm = TRUE),
+    orf_mean = rowMeans(.[, c("orf1b_crt_1", "orf1b_crt_2")], na.rm = TRUE),
+    mean_diff = abs(orf_mean - s_mean),
+    delta_case = ifelse(orf_mean <= 30 & (mean_diff > 6 | is.nan(s_mean)) & encountered >= "2021-06-01", 1, 0),
+    omicron_case = ifelse(orf_mean < 33 & mean_diff <= 3 & !is.na(orf1b_crt_1) & !is.na(orf1b_crt_2) & !is.na(s_gene_crt_1) & !is.na(s_gene_crt_2) & encountered >= "2021-12-01", 1, 0),
     alpha = ifelse(encountered >= "2021-04-11" & encountered < "2021-06-20", 1, 0),
-    delta = ifelse(encountered >= "2021-07-01" & encountered < "2021-12-12", 1, 0),
+    delta = ifelse(encountered >= "2021-06-20" & encountered < "2021-12-12", 1, 0),
     omicron = ifelse(encountered >= "2021-12-12" & encountered <= Sys.Date(), 1, 0),
     variant_indicator = factor(ifelse(delta == 1, "delta",
       ifelse(omicron == 1, "omicron", "pre_delta")
     ), levels = c("pre_delta", "delta", "omicron")),
     prior_infection = ifelse(grepl("yes", prior_test_positive), 1, 0),
     time_since_vax = as.numeric(difftime(encountered, date_last_covid_dose, units = "days")),
-    doses_recode = ifelse(covid_doses == "2" & (time_since_vax > 180 | is.na(time_since_vax)), "2_doses_>6m",
-      ifelse(covid_doses == "2" & time_since_vax <= 180, "2_doses_<6m",
+    doses_recode = ifelse(covid_doses == "2" & (time_since_vax >= 180), "2_doses_>6m",
+      ifelse(covid_doses == "2" & time_since_vax < 180, "2_doses_<6m",
         ifelse(covid_doses == "1", "1_dose",
           ifelse(covid_doses == "", "unknown", paste(covid_doses, "_doses", sep = ""))
         )
@@ -70,8 +74,8 @@ dat <- read.csv("data/id3c_scan_vaccine_data.csv") %>%
     ),
     doses_recode = factor(doses_recode, levels = c("unknown", "0_doses", "1_dose", "2_doses_>6m", "2_doses_<6m", "3_doses")),
     regression_doses = factor(doses_recode,
-      levels = c("unknown", "0_doses", "1_dose", "2_doses_>6m", "2_doses_<6m", "3_doses"),
-      labels = c("reference", "reference", "reference", "2_doses_>6m", "2_doses_<6m", "3_doses")
+      levels = c("0_doses", "1_dose", "2_doses_>6m", "2_doses_<6m", "3_doses"),
+      labels = c("reference", "reference", "2_doses_>6m", "2_doses_<6m", "3_doses")
     ), # combining unknown, 0 and 1 doses
     vax_status = ifelse(vaccination_status == "not_vaccinated" | vaccination_status == "partially_vaccinated" | vaccination_status == "unknown" | vaccination_status == "na" | vaccination_status == "invalid", "not_fully", vaccination_status),
     vax_status = factor(vax_status, levels = c("not_fully", "fully_vaccinated", "boosted")),
@@ -253,13 +257,13 @@ results_predelta <- boot_results_1(dat %>% filter(week_date >= "2021-04-01", !is
   mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Pre-Delta") %>%
   select(comparison, period, ppv, ppuv, pcv, pcuv, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
-# run funtion with bootstrapping for delta period
+# run function with bootstrapping for delta period
 boot_delta <- boot(dat %>% filter(!is.na(vax_status), variant_indicator == "delta", vax_status != "boosted"), boot_fully_v_not, R = 1000)
 results_delta <- boot_results_1(dat %>% filter(!is.na(vax_status), variant_indicator == "delta", vax_status != "boosted"), boot_delta) %>%
   mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Delta") %>%
   select(comparison, period, ppv, ppuv, pcv, pcuv, ve, ve_lower, ve_upper, rel_risk, rel_risk_lower, rel_risk_upper)
 
-# run funtion with bootstrapping for omicron period
+# run function with bootstrapping for omicron period
 boot_omicron <- boot(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "boosted"), boot_fully_v_not, R = 1000)
 results_omicron <- boot_results_1(dat %>% filter(!is.na(vax_status), variant_indicator == "omicron", vax_status != "boosted"), boot_omicron) %>%
   mutate(comparison = "Fully Vaccinated vs. Not Fully Vaccinated", period = "Omicron") %>%
@@ -315,15 +319,15 @@ mod1_dat <- mod1_dat %>% mutate(
 )
 mod1_dat <- cbind(mod1_dat, mod1_rr)
 
-test <- dat %>% filter(encountered >= "2021-06-01", encountered <= "2022-01-31")
+# test <- dat %>% filter(encountered >= "2021-06-01", encountered <= "2022-01-31")
 
 # Delta Specific
-mod2 <- glm(delta_case ~ regression_doses + week_num + prior_infection + incidence_indicator + age_group + region + race_ethnicity_recode + sex, data = dat %>% filter(encountered >= "2021-06-01", encountered <= "2022-01-31"), family = "binomial")
+mod2 <- glm(delta_case ~ regression_doses + week_date + prior_infection + incidence_indicator + age_group + region + race_ethnicity_recode + sex, data = dat %>% filter(encountered >= "2021-06-20", encountered <= "2022-02-01"), family = "binomial")
 mod2_rr <- data.frame(RR = (1 / exp(probratio(mod2, scale = "log", method = "delta")))[1:3, 1])
 mod2_dat <- as.data.frame(exp(cbind(coef(mod2), confint(mod2))))[2:4, ]
 names(mod2_dat) <- c("OR", "lower", "upper")
 mod2_dat$doses <- c("2 Doses >6m ago", "2 Doses <6m ago", "3 Doses")
-mod2_dat$variant <- "Delta Specific (April 2021 - Present)"
+mod2_dat$variant <- "Delta Specific (June 2021 - Present)"
 mod2_dat <- mod2_dat %>% mutate(
   VE = round((1 - OR) * 100, 1),
   VE_lower = round((1 - upper) * 100, 1),

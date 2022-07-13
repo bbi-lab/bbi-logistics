@@ -1,39 +1,27 @@
 #!/usr/bin/env bash
 
 PGSERVICE=seattleflu-production psql -c "\copy (
-with q as (select sample_id, pa.details ->> 'device' as device, info.\"geneTarget\", array_agg(crt) as crt_vals, present
+    with q as (select sample_id, pa.details ->> 'device' as device, info.\"geneTarget\", array_agg(crt) as crt_vals, present
 from warehouse.presence_absence as pa,
 jsonb_to_recordset(pa.details -> 'replicates') as info(\"geneTarget\" text, crt text)
 where info.\"geneTarget\" in ('COVID-19_Orf1b', 'COVID-19_S_gene', 'COVID-19-S_gene', 'SARS-CoV-2_Orf1b', 'SARS-CoV-2_S')
-and pa.details ->> 'device' in ('OpenArray', 'TaqmanQPCR')
+and pa.details ->> 'device' = 'TaqmanQPCR'
 and sample_id is not null
 and (present or present is null)
 group by sample_id, info.\"geneTarget\", present, pa.details ->> 'device'),
 
-crt_avg as (select distinct on (sample_id) sample_id, device, present,
-    SUM(case when crt_vals[1] = 'Undetermined' then 0 else crt_vals[1]::real end) filter (where \"geneTarget\" = 'COVID-19-S_gene' or \"geneTarget\" = 'COVID-19_S_gene' or \"geneTarget\" = 'SARS-CoV-2_S') as S_gene_crt_1,
-    SUM(case when crt_vals[2] = 'Undetermined' then 0 else crt_vals[2]::real end) filter (where \"geneTarget\" = 'COVID-19-S_gene' or \"geneTarget\" = 'COVID-19_S_gene' or \"geneTarget\" = 'SARS-CoV-2_S') as S_gene_crt_2,
-    SUM(case when crt_vals[1] = 'Undetermined' then 0 else crt_vals[1]::real end) filter (where \"geneTarget\" = 'COVID-19_Orf1b' or \"geneTarget\" = 'SARS-CoV-2_Orf1b') as Orf1b_crt_1,
-    SUM(case when crt_vals[2] = 'Undetermined' then 0 else crt_vals[2]::real end) filter (where \"geneTarget\" = 'COVID-19_Orf1b' or \"geneTarget\" = 'SARS-CoV-2_Orf1b') as Orf1b_crt_2
+crt as (select distinct on (sample_id) sample_id, device, present,
+    MAX(case when \"geneTarget\" = 'COVID-19-S_gene' or \"geneTarget\" = 'COVID-19_S_gene' or \"geneTarget\" = 'SARS-CoV-2_S' then crt_vals[1] end) as S_gene_crt_1,
+    MAX(case when \"geneTarget\" = 'COVID-19-S_gene' or \"geneTarget\" = 'COVID-19_S_gene' or \"geneTarget\" = 'SARS-CoV-2_S' then crt_vals[2] end) as S_gene_crt_2,
+    MAX(case when \"geneTarget\" = 'COVID-19_Orf1b' or \"geneTarget\" = 'SARS-CoV-2_Orf1b' then crt_vals[1] end) as Orf1b_crt_1,
+    MAX(case when \"geneTarget\" = 'COVID-19_Orf1b' or \"geneTarget\" = 'SARS-CoV-2_Orf1b' then crt_vals[2] end) as Orf1b_crt_2
 from q
 where array_length(crt_vals, 1) = 2
 group by sample_id, device, present
-order by sample_id, device),
-
-SG as (select *,
-case
-    when ((Orf1b_crt_1 + Orf1b_crt_2) / 2) <= 30 
-    and (abs(((S_gene_crt_1 + S_gene_crt_2) / 2) - ((Orf1b_crt_1 + Orf1b_crt_2) / 2)) > 6
-    or (S_gene_crt_1 = 0 and S_gene_crt_2 = 0))
-    then 'S gene negative'
-    when ((Orf1b_crt_1 + Orf1b_crt_2) / 2) < 33
-    and abs(((S_gene_crt_1 + S_gene_crt_2) / 2) - ((Orf1b_crt_1 + Orf1b_crt_2) / 2)) <= 3
-    and (S_gene_crt_1 != 0 and S_gene_crt_2 != 0 and Orf1b_crt_1 != 0 and Orf1b_crt_2 != 0)
-    then 'S gene positive'
-end as S_gene
-from crt_avg)
+order by sample_id, device)
 
 Select
+    encounter_id,
     sample_id,
     case
         when scan_study_arm = 'priority_arm_1' OR priority_code is not null
@@ -83,20 +71,21 @@ Select
     end as hcov19_result,
     SE.prior_test_positive,
     SE.covid_vax,
-    SE.covid_doses,
-    SE.vaccination_status,
-    SE.vac_date,
-    SE.vac_date_2,
-    SE.vac_date_3,
     SE.vaccine_manufacturer,
-    SE.vac_name_1,
-    SE.vac_name_2,
-    SE.vac_name_3,
     SE.number_of_covid_doses,
-    SE.date_last_covid_dose,
-    SG.S_gene
+    greatest(V.calculated_vac_date_1, V.calculated_vac_date_2, V.calculated_vac_date_3) as date_last_covid_dose,
+    V.calculated_covid_doses as covid_doses,
+    V.best_available_vac_status as vaccination_status,
+    V.calculated_vac_date_1 as vac_date_1,
+    V.calculated_vac_date_2 as vac_date_2,
+    V.calculated_vac_date_3 as vac_date_3,
+    V.calculated_vac_name_1 as vac_name_1,
+    V.calculated_vac_name_2 as vac_name_2,
+    V.calculated_vac_name_3 as vac_name_3,
+    crt.*
 From
     shipping.scan_encounters_v1 as SE
+    left join shipping.scan_encounters_with_best_available_vaccination_data_v1 V using (encounter_id)
     left join (
         select PA.sample_id,
             case
@@ -106,7 +95,7 @@ From
             end as present
         from shipping.hcov19_presence_absence_result_v1 PA
         ) PA using (sample_id)
-    left join SG using (sample_id)
+    left join crt using (sample_id)
 order by
     encountered desc
 )
