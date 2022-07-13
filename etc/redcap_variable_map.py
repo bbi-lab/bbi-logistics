@@ -163,7 +163,7 @@ project_dict = {
         "ss_state": "State 2",
         "ss_zipcode": "Zipcode 2",
         "alerts_email": "Email",
-        "participant_phone": "Phone",
+        "alerts_cell_phone": "Phone",
         "ss_pickup_location": "Pickup Location",
         "study_region": "Project Name",
         "pre_scan_barcode": "Collection",

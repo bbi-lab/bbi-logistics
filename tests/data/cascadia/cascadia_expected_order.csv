@@ -1,3 +1,4 @@
-Email,Phone,Street Address,Apt Number,City,State,Zipcode,Record Id,First Name,Last Name,Order Date,Pickup Location,Project Name,Today Tomorrow
-santaclaus@email.com,(555) 555-5555,3232 Lakeview Blvd,,Lake Oswego,OR,97035.0,10000060,Positive,Pat,2022-05-06,3232 Lakeview Blvd,CASCADIA_PDX,0
-email@email.com,(555) 555-5555,400 45th Ave NE,Suite 011,Seattle,WA,98105.0,20002340,Michael,Waters,2022-05-03,Front porch.,CASCADIA_SEA,1
+Email,Phone,Street Address,Apt Number,City,State,Zipcode,Record Id,First Name,Last Name,Order Date,Pickup Location,Project Name,Today Tomorrow,Notification Pref
+santaclaus@email.com,(555) 555-5555,3232 Lakeview Blvd,,Lake Oswego,OR,97035,10000060,Positive,Pat,2022-05-06,Front porch,CASCADIA_PDX,0,email
+santaclaus@email.com,(555) 555-5555,3232 Lakeview Blvd,1,Lake Oswego,OR,97035,10000061,Positive,Patty,2022-05-06,Front porch,CASCADIA_PDX,0,email
+email@email.com,(555) 555-5555,400 45th Ave NE,Suite 011,Seattle,WA,98105,20002340,Michael,Waters,2022-05-03,Front porch.,CASCADIA_SEA,1,email

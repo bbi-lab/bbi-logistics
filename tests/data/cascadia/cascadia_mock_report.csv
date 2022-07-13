@@ -1,7 +1,7 @@
-household_id,redcap_event_name,redcap_repeat_instrument,redcap_repeat_instance,participant_email,participant_phone,es_street_address,es_apt_num,es_city,es_state,es_zipcode,ss_ptid,ss_pt_first_name,ss_pt_last_name,ss_date_2,ss_pickup_location,ss_pickup_2,ss_pickup_1,ss_street_address,ss_apt_num,ss_city,ss_state,ss_zipcode,study_region
+household_id,redcap_event_name,redcap_repeat_instrument,redcap_repeat_instance,alerts_email,alerts_cell_phone,es_street_address,es_apt_num,es_city,es_state,es_zipcode,ss_ptid,ss_pt_first_name,ss_pt_last_name,ss_date_2,ss_pickup_location,ss_pickup_2,ss_pickup_1,ss_street_address,ss_apt_num,ss_city,ss_state,ss_zipcode,study_region
 6,0_arm_1,,,santaclaus@email.com,(555) 555-5555,3232 Lakeview Blvd,,Lake Oswego,OR,97035,,,,,,,,,,,,,1
 6,0_arm_1,symptom_survey,1,,,,,,,,10000060,Positive,Pat,5/6/2022,Front porch,,1,3232 Lakeview Blvd,,Lake Oswego,OR,97035,
-6,0_arm_1,symptom_survey,2,,,,,,,,10000060,Positive,Pat,5/6/2022,3232 Lakeview Blvd,,1,3232 Lakeview Blvd,,Lake Oswego,OR,97035,
+6,0_arm_2,,,santaclaus@email.com,(555) 555-5555,3232 Lakeview Blvd,,Lake Oswego,OR,97035,,,,,,,,,,,,,1
+6,0_arm_2,symptom_survey,2,,,,,,,,10000061,Positive,Patty,5/6/2022,Front porch,,1,3232 Lakeview Blvd,1,Lake Oswego,OR,97035,
 234,0_arm_1,,,email@email.com,(555) 555-5555,400 NE 45th St,,Seattle,WA,98105,,,,,,,,,,,,,2
 234,0_arm_1,symptom_survey,1,,,,,,,,20002340,Michael,Waters,5/3/2022,Front porch.,1,0,400 45th Ave NE,Suite 011,Seattle,WA,98105,
-,,,,,,,,,,,,,,,,,,,,,,,

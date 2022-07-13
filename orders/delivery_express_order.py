@@ -83,6 +83,8 @@ def format_orders(project_orders, project):
     # import to delivery express.
     project_orders['Today Tomorrow'] = pd.to_numeric(
         project_orders['Today Tomorrow'], downcast='integer')
+    project_orders['Zipcode'] = pd.to_numeric(project_orders['Zipcode'],
+                                              downcast='integer')
     # only use columns specified in the exportColumns
     project_orders = project_orders[project_orders.columns.intersection(
         exportColumns)]
@@ -142,7 +144,7 @@ def format_longitudinal(project, orders):
         orders = orders[orders['redcap_repeat_instrument'] == 'symptom_survey'] \
             .dropna(subset=['Order Date']) \
             .query("~index.duplicated(keep='last')") \
-            .apply(lambda row: use_best_address(original_address, row, '0_arm_1'), axis=1)
+            .apply(lambda row: use_best_address(original_address, row), axis=1)
         orders['Today Tomorrow'] = orders.apply(lambda x: 0
                                                 if x['Pickup 1'] == 1 else 1,
                                                 axis=1)
