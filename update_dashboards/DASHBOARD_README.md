@@ -7,26 +7,6 @@ All except the Vaccine Effectiveness dashboard are hosted on BBI's Tableau Serve
 A list of users and their groups can be found [here](https://uwnetid.sharepoint.com/:x:/r/sites/seattle_flu_study/analytics/_layouts/15/Doc.aspx?sourcedoc=%7B33f7869a-8a7f-45db-bda3-d8d2c644f34f%7D&action=editnew&cid=ba57fee9-e6c8-41e1-95e0-8ad93e3e9f8e). You can also login to the tableau server admin account to see the Users and Groups. Groups are used to partition which accounts have viewing rights to certain dashboards.
 
 
-
-#### Tableau External Dashboard Failure to Auto-Update Troubleshooting Checklist:
-1. **On Tableau online in a project folder:**
-    * look to refresh a dashboard data extract source in a drop down menu.
-2. **Check either Notifications icon or Jobs icon to see if refresh was successful:**
-    * Check relevant googlesheet if recent changes are updating (new dates added, etc.).
-    * If failure to update arises, Jobs page will provide more detailed error message to why a job failed. 
-3. **Explore the Data for points of error, places to look/questions to ask**
-   * Try manually publishing the new data extract from tableau desktop.
-   * Are there any map/shape files used in the dashboard that need to be published on Tableau seperately?
-   * What does the schedule look like for past updates on this dashboard in the Jobs tab?
-   * Are you using a version of Tableau Desktop that is different to the one used on the server?
-   * Are there many entires/tables that a dashboard is dependent on? (Limitation of Google   sheets only allows for 200,000 update operations a second)
-   * Look at project related python script in ['update_dashboards/'](https://github.com/cooperqmarshall/bbi-logistics/tree/master/update_dashboards). 
-4. All else fails reach out to dev team for 2nd opinion. 
-
-
-
-
-
 ## Google Sheets
 
 The external dashboards use Google Sheets for their data source. These sheets are owned by the `kittrack.bbi` google account. This was done because the external dashboards were previously hosted on Tableau Public to provide viewing rights to anyone with the link to the dashboard. Tableau Public would only allow automatic refreshings for the dashboards with Google Sheets as their data source.
@@ -66,6 +46,24 @@ Open Array Dashboard|BBI|ID3C|[898](https://backoffice.seattleflu.org/metabase/q
 - ID3C (Infectious Disease Data Distribution Center) is the database used by BBI to store data gathered from various COVID-19 research studies.
 - The Google Sheet data sources get their data from ID3C, but the dashboards connect directly to google sheets and not ID3C.
 - Data Extract refers to: If the dashboard uses a direct connection to ID3C, tableau can manage the updates on its own.
+
+
+# Troubleshooting
+
+#### Tableau External Dashboard Failure to Auto-Update Troubleshooting Checklist:
+1. **On Tableau online in a project folder:**
+    * look to refresh a dashboard data extract source in a drop down menu.
+2. **Check either Notifications icon or Jobs icon to see if refresh was successful:**
+    * Check relevant googlesheet if recent changes are updating (new dates added, etc.).
+    * If failure to update arises, Jobs page will provide more detailed error message to why a job failed. 
+3. **Explore the Data for points of error, places to look/questions to ask**
+   * Try manually publishing the new data extract from tableau desktop.
+   * Are there any map/shape files used in the dashboard that need to be published on Tableau seperately?
+   * What does the schedule look like for past updates on this dashboard in the Jobs tab?
+   * Are you using a version of Tableau Desktop that is different to the one used on the server?
+   * Are there many entires/tables that a dashboard is dependent on? (Limitation of Google   sheets only allows for 200,000 update operations a second)
+   * Look at project related python script in ['update_dashboards/'](https://github.com/cooperqmarshall/bbi-logistics/tree/master/update_dashboards). 
+4. All else fails reach out to dev team for 2nd opinion. 
 
 
 
