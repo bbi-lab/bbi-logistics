@@ -61,7 +61,9 @@ def main():
             # number of kits needed to get inventory to 6
             kits_needed['resupply'][participant] = max(6 - num_kits, 0)
 
-            if pt_data['es_ptid'] in serial_pts:
+            if pt_data[pt_data['es_ptid'].notna()]['es_ptid'] \
+                .astype(int) \
+                .values[0] in serial_pts:
                 kits_needed['serial'][participant] = 1
 
         if kits_needed['welcome'] or ship or kits_needed['serial']:
