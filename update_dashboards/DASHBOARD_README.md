@@ -8,20 +8,19 @@ A list of users and their groups can be found [here](https://uwnetid.sharepoint.
 
 
 
-### Tableau External Dashboard Failure to Auto-Update Troubleshooting Checklist:
+#### Tableau External Dashboard Failure to Auto-Update Troubleshooting Checklist:
 1. **On Tableau online in a project folder:**
-    **a.** look to refresh a dashboard data extract source in a drop down menu.
+    * look to refresh a dashboard data extract source in a drop down menu.
 2. **Check either Notifications icon or Jobs icon to see if refresh was successful:**
-    **a.** Check relevant googlesheet if recent changes are updating (new dates added, etc.).
-    **b.** If failure to update arises, Jobs page will provide more detailed error message to 
-       why a job failed. 
+    * Check relevant googlesheet if recent changes are updating (new dates added, etc.).
+    * If failure to update arises, Jobs page will provide more detailed error message to why a job failed. 
 3. **Explore the Data for points of error, places to look/questions to ask**
-   **a.** Try manually publishing the new data extract from tableau desktop.
-   **b.** Are there any map/shape files used in the dashboard that need to be published on Tableau seperately?
-   **c.** What does the schedule look like for past updates on this dashboard in the Jobs tab?
-   **d.** Are you using a version of Tableau Desktop that is different to the one used on the server?
-   **e.** Are there many entires/tables that a dashboard is dependent on? (Limitation of Google   sheets only allows for 200,000 update operations a second)
-   **f.** Look at project related python script in ['update_dashboards/'](https://github.com/cooperqmarshall/bbi-logistics/tree/master/update_dashboards). 
+   * Try manually publishing the new data extract from tableau desktop.
+   * Are there any map/shape files used in the dashboard that need to be published on Tableau seperately?
+   * What does the schedule look like for past updates on this dashboard in the Jobs tab?
+   * Are you using a version of Tableau Desktop that is different to the one used on the server?
+   * Are there many entires/tables that a dashboard is dependent on? (Limitation of Google   sheets only allows for 200,000 update operations a second)
+   * Look at project related python script in ['update_dashboards/'](https://github.com/cooperqmarshall/bbi-logistics/tree/master/update_dashboards). 
 4. All else fails reach out to dev team for 2nd opinion. 
 
 
