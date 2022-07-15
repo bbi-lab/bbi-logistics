@@ -48,7 +48,7 @@ Open Array Dashboard|BBI|ID3C|[898](https://backoffice.seattleflu.org/metabase/q
 - Data Extract refers to: If the dashboard uses a direct connection to ID3C, tableau can manage the updates on its own.
 
 
-# Troubleshooting
+## Troubleshooting
 
 #### Tableau External Dashboard Failure to Auto-Update Troubleshooting Checklist:
 1. **On Tableau online in a project folder:**
