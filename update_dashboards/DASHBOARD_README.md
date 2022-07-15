@@ -16,6 +16,13 @@ The external dashboards have since been migrated to BBI's Tableau Server for sec
 
 Using google sheets in this manner required a set of ETL python scripts to be developed to keep the sheets updated. These scripts are in [`update_dashboards/`](update_dashboards/).
 
+#### Relevant libraries/technologies used (documentation links attached): 
+* [Google Service Accounts](https://cloud.google.com/iam/docs/understanding-service-accounts#:~:text=A%20service%20account%20is%20a,on%20virtual%20machines%20(VMs).) (GSA) - google cloud accounts with user permissions that interact/update google sheets.  
+* Python [gspread](https://docs.gspread.org/en/latest/user-guide.html) library - to interact with google sheets via GSA accounts (append rows, delete tables, etc).
+* Linux [cronjobs/crontabs](https://www.ibm.com/docs/en/aix/7.2?topic=c-crontab-command) - a linux library that allows shell commands to be run at regular intervals such as updating a google sheet.   
+
+*Future Dev Note:* The infrastructure set up to interact google sheets may be useful in setting up future dashboard/order-report projects that involve interacting with external delivery data from Delivery Express or USPS vendors (TBD).
+
 ## BBI Analytics Website
 > depts.washington.edu/kittrack
 
@@ -39,5 +46,24 @@ Open Array Dashboard|BBI|ID3C|[898](https://backoffice.seattleflu.org/metabase/q
 - ID3C (Infectious Disease Data Distribution Center) is the database used by BBI to store data gathered from various COVID-19 research studies.
 - The Google Sheet data sources get their data from ID3C, but the dashboards connect directly to google sheets and not ID3C.
 - Data Extract refers to: If the dashboard uses a direct connection to ID3C, tableau can manage the updates on its own.
+
+
+## Troubleshooting
+
+#### Tableau External Dashboard Failure to Auto-Update Troubleshooting Checklist:
+1. **On Tableau online in a project folder:**
+    * look to refresh a dashboard data extract source in a drop down menu.
+2. **Check either Notifications icon or Jobs icon to see if refresh was successful:**
+    * Check relevant googlesheet if recent changes are updating (new dates added, etc.).
+    * If failure to update arises, Jobs page will provide more detailed error message to why a job failed. 
+3. **Explore the Data for points of error, places to look/questions to ask**
+   * Try manually publishing the new data extract from tableau desktop.
+   * Are there any map/shape files used in the dashboard that need to be published on Tableau seperately?
+   * What does the schedule look like for past updates on this dashboard in the Jobs tab?
+   * Are you using a version of Tableau Desktop that is different to the one used on the server?
+   * Are there many entires/tables that a dashboard is dependent on? (Limitation of Google   sheets only allows for 200,000 update operations a second)
+   * Look at project related python script in ['update_dashboards/'](https://github.com/cooperqmarshall/bbi-logistics/tree/master/update_dashboards). 
+4. All else fails reach out to dev team for 2nd opinion. 
+
 
 
