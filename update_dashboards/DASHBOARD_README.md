@@ -16,6 +16,14 @@ The external dashboards have since been migrated to BBI's Tableau Server for sec
 
 Using google sheets in this manner required a set of ETL python scripts to be developed to keep the sheets updated. These scripts are in [`update_dashboards/`](update_dashboards/).
 
+##### Relevant Tech Used
+Relevant libraries/technologies used (Documentation links attached): 
+* [Google Service Accounts](https://cloud.google.com/iam/docs/understanding-service-accounts#:~:text=A%20service%20account%20is%20a,on%20virtual%20machines%20(VMs).) (GSA) - google cloud accounts with user permissions that interact/update google sheets  
+* Python [gspread](https://docs.gspread.org/en/latest/user-guide.html) library - to interact with google sheets via GSA accounts (append rows, delete tables, etc)
+* Linux [cronjobs/crontabs](https://www.ibm.com/docs/en/aix/7.2?topic=c-crontab-command) - a linux library that allows shell commands to be run at regular intervals such as updating a google sheet.   
+
+**FUTURE DEV NOTE:** The infrastructure set up to interact google sheets may be useful in setting up future dashboard/order-report projects that involve interacting with external delivery data from Delivery Express or USPS vendors. (TBD)
+
 ## BBI Analytics Website
 > depts.washington.edu/kittrack
 
@@ -39,5 +47,6 @@ Open Array Dashboard|BBI|ID3C|[898](https://backoffice.seattleflu.org/metabase/q
 - ID3C (Infectious Disease Data Distribution Center) is the database used by BBI to store data gathered from various COVID-19 research studies.
 - The Google Sheet data sources get their data from ID3C, but the dashboards connect directly to google sheets and not ID3C.
 - Data Extract refers to: If the dashboard uses a direct connection to ID3C, tableau can manage the updates on its own.
+
 
 
