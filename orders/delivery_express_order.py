@@ -6,6 +6,7 @@ import sys
 from os import environ, path
 from datetime import datetime
 from urllib.parse import urlparse
+from numpy import ogrid
 from redcap import Project
 import pandas as pd
 import envdir
@@ -141,6 +142,12 @@ def format_longitudinal(project, orders):
         orders['Record Id'] = orders['Record Id'].fillna(0).astype(int)
         original_address = orders[
             orders['redcap_repeat_instrument'] != 'symptom_survey']
+
+        original_address['Project Name'] = original_address.apply(
+            lambda x: original_address.filter(items=[(x.name[0], '0_arm_1')],
+                                              axis=0)['Project Name'].values[0
+                                                                             ],
+            axis=1)
         orders = orders[orders['redcap_repeat_instrument'] == 'symptom_survey'] \
             .dropna(subset=['Order Date']) \
             .query("~index.duplicated(keep='last')") \
