@@ -35,12 +35,12 @@ def main():
     print('Importing PC data')
     import_pc(pc_data.replace('', pd.NA), sheet.worksheet('pc'))
 
-    print('Getting Group Enrollment REDCap data')
-    ge_data = pd.DataFrame(get_ge_redcap_data()).apply(
-        lambda x: pd.to_datetime(x).dt.strftime('%Y-%m-%d'))
+    # print('Getting Group Enrollment REDCap data')
+    # ge_data = pd.DataFrame(get_ge_redcap_data()).apply(
+    #     lambda x: pd.to_datetime(x).dt.strftime('%Y-%m-%d'))
 
-    print('Importing Group Enrollment data')
-    import_ge(ge_data, sheet.worksheet('ge'))
+    # print('Importing Group Enrollment data')
+    # import_ge(ge_data, sheet.worksheet('ge'))
 
     sheet.worksheet('update').update(
         'A2',
