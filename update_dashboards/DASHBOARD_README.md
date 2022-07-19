@@ -4,7 +4,7 @@ This readme describes the environment, data storage, and access for the BBI Tabl
 ## Tableau Server
 All except the Vaccine Effectiveness dashboard are hosted on BBI's Tableau Server Instance. The server can be accessed at https://tableau.brotmanbaty.org/. The server is running on a private AWS EC2 instance with a Bastion Host for ssh access. This architecture was used to maintain HIPAA compliance.
 
-A list of users and their groups can be found [here](https://uwnetid.sharepoint.com/:x:/r/sites/seattle_flu_study/analytics/_layouts/15/Doc.aspx?sourcedoc=%7B33f7869a-8a7f-45db-bda3-d8d2c644f34f%7D&action=editnew&cid=ba57fee9-e6c8-41e1-95e0-8ad93e3e9f8e). You can also login to the tableau server admin account to see the Users and Groups. Groups are used to partition which accounts have viewing rights to certain dashboards.
+A list of users and their groups can be found [here](https://uwnetid.sharepoint.com/:x:/r/sites/seattle_flu_study/analytics/_layouts/15/Doc.aspx?sourcedoc=%7B33f7869a-8a7f-45db-bda3-d8d2c644f34f%7D&action=editnew&cid=ba57fee9-e6c8-41e1-95e0-8ad93e3e9f8e). You can also login to the Tableau server admin account to see the Users and Groups. Groups are used to partition which accounts have viewing rights to certain dashboards.
 
 
 ## Google Sheets
@@ -45,7 +45,7 @@ Open Array Dashboard|BBI|ID3C|[898](https://backoffice.seattleflu.org/metabase/q
 ### Notes:
 - ID3C (Infectious Disease Data Distribution Center) is the database used by BBI to store data gathered from various COVID-19 research studies.
 - The Google Sheet data sources get their data from ID3C, but the dashboards connect directly to google sheets and not ID3C.
-- Data Extract refers to: If the dashboard uses a direct connection to ID3C, tableau can manage the updates on its own.
+- Data Extract refers to: If the dashboard uses a direct connection to ID3C, Tableau can manage the updates on its own.
 
 
 ## Troubleshooting
@@ -54,10 +54,10 @@ Open Array Dashboard|BBI|ID3C|[898](https://backoffice.seattleflu.org/metabase/q
 1. **On Tableau online in a project folder:**
     * look to refresh a dashboard data extract source in a drop down menu.
 2. **Check either Notifications icon or Jobs icon to see if refresh was successful:**
-    * Check relevant googlesheet if recent changes are updating (new dates added, etc.).
+    * Check relevant Google sheet if recent changes are updating (new dates added, etc.).
     * If failure to update arises, Jobs page will provide more detailed error message to why a job failed. 
 3. **Explore the Data for points of error, places to look/questions to ask**
-   * Try manually publishing the new data extract from tableau desktop.
+   * Try manually publishing the new data extract from Tableau desktop.
    * Are there any map/shape files used in the dashboard that need to be published on Tableau seperately?
    * What does the schedule look like for past updates on this dashboard in the Jobs tab?
    * Are you using a version of Tableau Desktop that is different to the one used on the server?
