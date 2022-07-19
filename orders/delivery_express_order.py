@@ -6,7 +6,6 @@ import sys
 from os import environ, path
 from datetime import datetime
 from urllib.parse import urlparse
-from numpy import ogrid
 from redcap import Project
 import pandas as pd
 import envdir
@@ -30,7 +29,7 @@ def main():
     '''Gets orders from redcap and combine them in a csv file'''
     order_export = pd.DataFrame(columns=exportColumns, dtype='string')
 
-    for project in project_dict:  #(p for p in project_dict if p == 'Cascadia'):
+    for project in (p for p in project_dict if p == 'Cascadia'):
         print(f'Kit orders for {project}: ', end='')
         try:
             redcap_project = init_project(project)
@@ -148,7 +147,9 @@ def format_longitudinal(project, orders):
                                               axis=0)['Project Name'].values[0
                                                                              ],
             axis=1)
-        orders = orders[orders['redcap_repeat_instrument'] == 'symptom_survey'] \
+        orders = orders[(orders['redcap_repeat_instrument'] == 'symptom_survey')
+                        & (orders['ss_return_tracking'].isna())
+                        & any(orders[['Pickup 1', 'Pickup 2']].notna())] \
             .dropna(subset=['Order Date']) \
             .query("~index.duplicated(keep='last')") \
             .apply(lambda row: use_best_address(original_address, row), axis=1)
