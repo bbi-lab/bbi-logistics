@@ -19,7 +19,7 @@ Using google sheets in this manner required a set of ETL python scripts to be de
 #### Relevant libraries/technologies used (documentation links attached): 
 * [Google Service Accounts](https://cloud.google.com/iam/docs/understanding-service-accounts#:~:text=A%20service%20account%20is%20a,on%20virtual%20machines%20(VMs).) (GSA) - google cloud accounts with user permissions that interact/update google sheets.  
 * Python [gspread](https://docs.gspread.org/en/latest/user-guide.html) library - to interact with google sheets via GSA accounts (append rows, delete tables, etc).
-* Linux [cronjobs/crontabs](https://www.ibm.com/docs/en/aix/7.2?topic=c-crontab-command) - a linux library that allows shell commands to be run at regular intervals such as updating a google sheet.   
+* Linux [cronjobs/crontabs](https://www.ibm.com/docs/en/aix/7.2?topic=c-crontab-command) - a linux library that allows shell commands to be run at regular intervals to allow for tasks such as updating a google sheet.   
 
 *Future Dev Note:* The infrastructure set up to interact google sheets may be useful in setting up future dashboard/order-report projects that involve interacting with external delivery data from Delivery Express or USPS vendors (TBD).
 
@@ -61,7 +61,7 @@ Open Array Dashboard|BBI|ID3C|[898](https://backoffice.seattleflu.org/metabase/q
    * Are there any map/shape files used in the dashboard that need to be published on Tableau seperately?
    * What does the schedule look like for past updates on this dashboard in the Jobs tab?
    * Are you using a version of Tableau Desktop that is different to the one used on the server?
-   * Are there many entires/tables that a dashboard is dependent on? (Limitation of Google   sheets only allows for 200,000 update operations a second)
+   * Are there many entires/tables that a dashboard is dependent on? (Limitation of Google sheets, it only allows for 200,000 update operations a second)
    * Look at project related python script in ['update_dashboards/'](https://github.com/cooperqmarshall/bbi-logistics/tree/master/update_dashboards). 
 4. All else fails reach out to dev team for 2nd opinion. 
 
