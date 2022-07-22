@@ -110,8 +110,8 @@ project_dict = {
         "back_end_scan": "BEMS",
     },
     "HCT": {
-        "project_id": "45",
-        "Report Id": "10",
+        "project_id": "148",
+        "Report Id": "1924",
         "project_type": "longitudinal",
         "record_id": "Record Id",
         "tod_tom_calc": "Today Tomorrow",
