@@ -36,9 +36,9 @@ def send_email():
             MIMEText(
                 f'''Hello BBI Logistics,<br><br>The Delivery Express Order file for
                 {subject_date} was successfully generated and is attached to this email.<br><br>
-                Best,<br>
-                Cooper Marshall<br><br>
-                <span style='font-style: italic;'>This email was sent automatically.</span>''',
+                <br><br>
+                <span style='font-style: italic;'>This email was sent automatically. Please contact Ben Capodanno for any
+                questions regarding the contents of this email.</span>''',
                 'html'))
     else:
         msg['Subject'] = f'{subject_date} Failed to Generate Delivery Express Order File'
@@ -48,10 +48,9 @@ def send_email():
                 for {subject_date} failed to generate. Please generate the file
                 by running "python3 orders/delivery_express_order.py"
                 from inside the "logistics" folder.<br><br>
-                Best,<br>
-                Cooper
-                Marshall<br><br>
-                <span style='font-style: italic;'>This email was sent automatically.</span>''',
+                <br><br>
+                <span style='font-style: italic;'>This email was sent automatically. Please contact Ben Capodanno for any
+                questions regarding the contents of this email.</span>''',
                 'html'))
     with SMTP(host='smtp.office365.com', port=587) as smtp:
         print(smtp.noop())
