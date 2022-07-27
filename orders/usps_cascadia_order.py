@@ -65,7 +65,7 @@ def main():
                 kits_needed['serial'][participant] = 1
 
         if kits_needed['welcome'] or ship or kits_needed['serial']:
-            address = get_house_address(order_report, house_id)
+            address = get_household_address(order_report, house_id)
 
         # do not send welcome kits unless everyone has completed the enrollment survey
         if kits_needed['welcome'] and not any(
@@ -100,14 +100,63 @@ def append_order(orders, sku, quantity, address):
     return pd.concat([orders, address], join='inner', ignore_index=True)
 
 
-def get_house_address(order_report, house_id):
-    address = order_report.loc[[(house_id, '0_arm_1')]] \
-        .query('redcap_repeat_instrument.isna()')
+def get_household_address(order_report, house_id):
+    """Get the most up to date address from a household"""
+    enroll_address = get_enrollment_address(order_report.loc[house_id])
+    updated_address = get_most_recent_address(order_report.loc[house_id])
+
+    # use the more recent symptom survey address if one exists
+    address = enroll_address if updated_address is None else updated_address
+
+    # always use original delivery instructions since symptom
+    # survey has no additional dropoff instructions
+    address['Delivery Instructions'] = enroll_address['Delivery Instructions']
+
     address['Project Name'] = 'Cascadia_SEA' if address[
         'Project Name'].values == 2 else 'Cascadia_PDX'
     address['Zipcode'] = address['Zipcode'].astype(int) if not pd.isna(
         address['Zipcode'].values) else ''
+
     return address[address.columns.intersection(export_columns)]
+
+
+def get_most_recent_address(household_records):
+    """Get the most recent address provided by a household"""
+    # get a households symptom surveys, which may hold additional addresses
+    symptom_surveys = household_records[household_records['redcap_repeat_instrument'] == 'symptom_survey'].copy()
+    symptom_surveys['ss_date_1'] = symptom_surveys['ss_date_1'].astype('datetime64')
+
+    # sort symptom survey by most recently completed
+    # note: we assume non-empty values for `Street Address 2`, `City 2`, and `State 2`
+    # implies a 'complete' address. The appended `2` indicates the value is from the
+    # symptom survey and not the enrollment survey
+    symptom_surveys = symptom_surveys.sort_values(by='ss_date_1', ascending = False)
+    complete_addresses = symptom_surveys[
+                            ~(
+                                (pd.isna(symptom_surveys['Street Address 2'])) &
+                                (pd.isna(symptom_surveys['City 2'])) &
+                                (pd.isna(symptom_surveys['State 2']))
+                            )
+                        ].copy()
+
+    if not complete_addresses.empty:
+        complete_addresses['Street Address'] = complete_addresses['Street Address 2']
+        complete_addresses['Apt Number'] = complete_addresses['Apt Number 2']
+        complete_addresses['City'] = complete_addresses['City 2']
+        complete_addresses['State'] = complete_addresses['State 2']
+        complete_addresses['Zipcode'] = complete_addresses['Zipcode 2']
+
+        return complete_addresses.iloc[[0]]
+    else:
+        return None
+
+
+def get_enrollment_address(household_records):
+    """
+    Get the address from the first participant in a household's
+    enrollment event.
+    """
+    return household_records.loc[['0_arm_1']].query('redcap_repeat_instrument.isna()')
 
 
 def generate_order_number(address, orders):
