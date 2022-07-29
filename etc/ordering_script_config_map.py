@@ -58,6 +58,8 @@ project_dict = {
         "study_region": "Project Name",
         "pre_scan_barcode": "Collection",
         "back_end_scan": "BEMS",
+        "manage_hh_reporter": "HH Reporter",
+        "participant_pref_first_name": "Pref First Name",
     },
     "AIRS": {
         "project_id": "1372",
