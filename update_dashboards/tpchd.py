@@ -18,7 +18,7 @@ envdir.open(os.path.join(base_dir, '.env/redcap'))
 sys.path.append(base_dir)
 
 # pylint: disable=import-error, wrong-import-position
-from etc.redcap_variable_map import project_dict
+from etc.scan_tphcd_dashboard_config import project_dict
 
 
 def main():

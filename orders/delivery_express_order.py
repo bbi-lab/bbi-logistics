@@ -17,7 +17,7 @@ envdir.open(os.path.join(base_dir, '.env/redcap'))
 sys.path.append(base_dir)
 
 # pylint: disable=import-error, wrong-import-position
-from etc.redcap_variable_map import project_dict
+from etc.ordering_script_config_map import project_dict
 
 LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
 logging.basicConfig()
