@@ -55,7 +55,7 @@ def main():
             'Zipcode': 'home_zipcode_2'
         },
         'HCT': {
-            "project_id": "45",
+            "project_id": "148",
             'pcdeqc': 'samp_process_date',
             'Zipcode': 'core_zipcode_2'
         }
