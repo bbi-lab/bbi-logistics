@@ -145,14 +145,15 @@ def format_longitudinal(project, orders):
         )
 
         # orders we must fulfill are symptom surveys without an existing tracking number
-        # and which have a designated pickup time. We can drop records which do not have
-        # a order date. We only need to schedule max one pickup per participant so can
-        # simply keep the final index entry associated with them. Finally we should also
-        # apply the best address for each remaining row of the order sheet.
+        # which have a designated pickup time and have a swab trigger. We can drop records
+        # which do not have a order date. We only need to schedule max one pickup per
+        # participant so can simply keep the final index entry associated with them. Finally
+        # we should also apply the best address for each remaining row of the order sheet.
         orders = orders[
             (orders['redcap_repeat_instrument'] == 'symptom_survey') &
             (orders['ss_return_tracking'].isna()) &
-            any(orders[['Pickup 1', 'Pickup 2']].notna())
+            any(orders[['Pickup 1', 'Pickup 2']].notna()) &
+            (orders['ss_trigger_swab'])
         ] \
         .dropna(subset=['Order Date']) \
         .query("~index.duplicated(keep='last')") \
