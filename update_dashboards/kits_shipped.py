@@ -50,7 +50,7 @@ projectDict = {
         'Zipcode': 'home_zipcode_2'
     },
     'HCT': {
-        "project_id": "45",
+        "project_id": "148",
         'Record Id': 'record_id',
         'Collection': 'pre_scan_barcode',
         'BEMS': 'back_end_scan',
