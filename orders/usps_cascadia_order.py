@@ -13,7 +13,7 @@ sys.path.append(base_dir)
 
 export_columns = [
     "OrderID", "Household ID", "Quantity", "SKU", "Order Date", "Project Name",
-    "First Name", "Last Name", "Street Address", "Apt Number", "City", "State",
+    "Pref First Name", "Last Name", "Street Address", "Apt Number", "City", "State",
     "Zipcode", "Delivery Instructions", "Email", "Phone"
 ]
 
@@ -47,13 +47,12 @@ def main():
                 kits_needed['welcome'][participant] = 1
                 continue
 
-            kit_barcodes = pt_data.loc[pt_data['redcap_repeat_instrument'] ==
-                                       'swab_barcodes', barcode_columns] \
-                                    .notna().sum(axis=1).sum()
+            kit_barcodes = pt_data.loc[
+                pt_data['redcap_repeat_instrument'] == 'swab_barcodes', barcode_columns
+            ].notna().sum(axis=1).sum()
 
-            kit_returns = pt_data.loc[pt_data['redcap_repeat_instrument'] ==
-                                      'symptom_survey', 'ss_return_tracking'] \
-                                    .count()
+            kit_returns = pt_data.loc[pt_data['redcap_repeat_instrument'] == 'symptom_survey', 'ss_return_tracking'
+            ].count()
 
             num_kits = kit_barcodes - kit_returns
             if num_kits <= 2:
@@ -72,50 +71,56 @@ def main():
                 order_report.loc[[house_id],
                                  'enrollment_survey_complete'] == 0):
             welcome_kits_needed = sum(kits_needed['welcome'].values())
-            orders = append_order(orders, 3, welcome_kits_needed, address)
+            orders = append_order(orders, house_id, 3, welcome_kits_needed, address)
 
         if ship:
             # resupply entire house
             resupply_kits_needed = sum(kits_needed['resupply'].values())
-            orders = append_order(orders, 1, resupply_kits_needed, address)
+            orders = append_order(orders, house_id, 1, resupply_kits_needed, address)
 
         if kits_needed['serial']:
             for pt, _ in kits_needed['serial'].items():
-                orders = append_order(orders, 2, 1, address)
+                orders = append_order(orders, house_id, 2, 1, address)
 
     export_orders(orders)
 
 
-def append_order(orders, sku, quantity, address):
+def append_order(orders, household, sku, quantity, address):
     if quantity > 20 and sku == 1:  # seperate replenishment kits into other order becaues of max shippment size
-        orders = append_order(orders, sku, quantity - 20, address)
+        orders = append_order(orders, household, sku, quantity - 20, address)
         quantity = 20
     if quantity > 4 and sku == 3:  # seperate welcome kits into other order becaues of max shippment size
-        orders = append_order(orders, sku, quantity - 4, address)
+        orders = append_order(orders, household, sku, quantity - 4, address)
         quantity = 4
     address['SKU'] = sku
     address['Quantity'] = quantity
     address['OrderID'] = generate_order_number(address, orders)
-    address['Household ID'] = address.index[0][0]
+    address['Household ID'] = household
     return pd.concat([orders, address], join='inner', ignore_index=True)
 
 
-def get_household_address(order_report, house_id):
+def get_household_address(household_records, house_id):
     """Get the most up to date address from a household"""
-    enroll_address = get_enrollment_address(order_report.loc[house_id])
-    updated_address = get_most_recent_address(order_report.loc[house_id])
+    enroll_address = get_enrollment_address(household_records.loc[house_id])
+    updated_address = get_most_recent_address(household_records.loc[house_id])
 
     # use the more recent symptom survey address if one exists
     address = enroll_address if updated_address is None else updated_address
 
-    # always use original delivery instructions since symptom
-    # survey has no additional dropoff instructions
+    # always use original delivery instructions since symptom survey has no
+    # additional dropoff instructions
+    address['Pref First Name']       = get_best_first_name(enroll_address)
+    address['Last Name']             = enroll_address['Last Name']
+    address['Email']                 = enroll_address['Phone']
+    address['Phone']                 = enroll_address['Phone']
     address['Delivery Instructions'] = enroll_address['Delivery Instructions']
 
     address['Project Name'] = 'Cascadia_SEA' if address[
-        'Project Name'].values == 2 else 'Cascadia_PDX'
+        'Project Name'
+    ].values == 2 else 'Cascadia_PDX'
     address['Zipcode'] = address['Zipcode'].astype(int) if not pd.isna(
-        address['Zipcode'].values) else ''
+        address['Zipcode'].values
+    ) else ''
 
     return address[address.columns.intersection(export_columns)]
 
@@ -153,10 +158,18 @@ def get_most_recent_address(household_records):
 
 def get_enrollment_address(household_records):
     """
-    Get the address from the first participant in a household's
+    Get the address from the head of household in a passed household's
     enrollment event.
     """
-    return household_records.loc[['0_arm_1']].query('redcap_repeat_instrument.isna()')
+    # get the head of house id, which is the first non NaN value in this household's data set.
+    # We have to reset the index to avoid a duplicated index error and then grab the index of the
+    # actual head of house record based on the head of house id
+    tmp = household_records.copy()
+    tmp.reset_index(level=0, inplace=True)
+    head_of_house_idx = int(tmp.iloc[
+        tmp["HH Reporter"].notna().idxmax()
+    ]['HH Reporter'])
+    return household_records.loc[[f'{head_of_house_idx}_arm_1']].query('redcap_repeat_instrument.isna()')
 
 
 def generate_order_number(address, orders):
@@ -169,6 +182,18 @@ def generate_order_number(address, orders):
             l[len(l) - 1] = chr(ord(l[len(l) - 1]) + 1)
             order_id = ''.join(l)
     return order_id
+
+
+def get_best_first_name(enroll_address):
+    '''
+    Return the preferred first name of the participant if it exists or their
+    full first name if it does not.
+    '''
+    pref_first_name = enroll_address.iloc[0]['Pref First Name']
+    if not pd.isna(pref_first_name):
+        return pref_first_name
+    else:
+        return enroll_address.iloc[0]['First Name']
 
 
 def export_orders(orders):
