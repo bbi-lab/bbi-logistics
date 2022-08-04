@@ -43,20 +43,30 @@ def main():
         for participant in participants:
             pt_data = order_report.loc[[(house_id, participant)]]
 
-            if not any(pt_data['swab_barcodes_complete'] == 2):
-                kits_needed['welcome'][participant] = 1
+            # the patient should be enrolled and consented to get any kits
+            if not (any(pt_data['enrollment_survey_complete'] == 2) and any(pt_data['consent_form_complete'] == 2)):
                 continue
 
+            # if no swab barcodes have been completed they need a welcome kit
+            if not any(pt_data['swab_barcodes_complete'] == 2):
+                kits_needed['welcome'][participant] = 1
+                continue # if they dont have welcome kit yet, they definitely don't need anything else
+
+            # current barcodes a pt has
             kit_barcodes = pt_data.loc[
                 pt_data['redcap_repeat_instrument'] == 'swab_barcodes', barcode_columns
             ].notna().sum(axis=1).sum()
 
-            kit_returns = pt_data.loc[pt_data['redcap_repeat_instrument'] == 'symptom_survey', 'ss_return_tracking'
+            # current barcodes a pt has returned
+            kit_returns = pt_data.loc[
+                pt_data['redcap_repeat_instrument'] == 'symptom_survey', 'ss_return_tracking'
             ].count()
 
+            # if a pt has less than 3 total kits they will need more shipped
             num_kits = kit_barcodes - kit_returns
-            if num_kits <= 2:
+            if num_kits < 3:
                 ship = True
+
             # number of kits needed to get inventory to 6
             kits_needed['resupply'][participant] = max(6 - num_kits, 0)
 
@@ -66,15 +76,13 @@ def main():
         if kits_needed['welcome'] or ship or kits_needed['serial']:
             address = get_household_address(order_report, house_id)
 
-        # do not send welcome kits unless everyone has completed the enrollment survey
-        if kits_needed['welcome'] and not any(
-                order_report.loc[[house_id],
-                                 'enrollment_survey_complete'] == 0):
+        # send welcome kits to patients in a household that are enrolled
+        if kits_needed['welcome']:
             welcome_kits_needed = sum(kits_needed['welcome'].values())
             orders = append_order(orders, house_id, 3, welcome_kits_needed, address)
 
+        # resupply entire house
         if ship:
-            # resupply entire house
             resupply_kits_needed = sum(kits_needed['resupply'].values())
             orders = append_order(orders, house_id, 1, resupply_kits_needed, address)
 
@@ -86,16 +94,25 @@ def main():
 
 
 def append_order(orders, household, sku, quantity, address):
+    """
+    Append household orders to the broader order form
+    """
+    # don't append orders lacking a valid address
+    if any(pd.isna(address['Street Address'])) and any(pd.isna(address['City'])) and any(pd.isna(address['State'])):
+        return orders
+
     if quantity > 20 and sku == 1:  # seperate replenishment kits into other order becaues of max shippment size
         orders = append_order(orders, household, sku, quantity - 20, address)
         quantity = 20
-    if quantity > 4 and sku == 3:  # seperate welcome kits into other order becaues of max shippment size
+    if quantity > 4 and sku == 3:  # seperate welcome kits into other order because of max shippment size
         orders = append_order(orders, household, sku, quantity - 4, address)
         quantity = 4
+
     address['SKU'] = sku
     address['Quantity'] = quantity
     address['OrderID'] = generate_order_number(address, orders)
     address['Household ID'] = household
+
     return pd.concat([orders, address], join='inner', ignore_index=True)
 
 
