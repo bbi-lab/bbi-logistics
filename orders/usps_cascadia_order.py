@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 
+import sys, logging, envdir
+from os import path, environ
 from datetime import datetime
-import sys
-from os import path
 import pandas as pd
-from delivery_express_order import init_project, get_redcap_orders
-import envdir
+from delivery_express_order import init_project, get_redcap_report
 
+# Place all modules within this script's path
 base_dir = path.abspath(__file__ + "/../../")
-envdir.open(path.join(base_dir, '.env/redcap'))
 sys.path.append(base_dir)
 
-export_columns = [
+# Set up envdir
+envdir.open(path.join(base_dir, '.env/redcap'))
+
+# Set up logging
+LOG_LEVEL = environ.get('LOG_LEVEL', 'INFO')
+logging.basicConfig()
+LOG = logging.getLogger(__name__)
+LOG.setLevel(LOG_LEVEL)
+
+EXPORT_COLUMNS = [
     "OrderID", "Household ID", "Quantity", "SKU", "Order Date", "Project Name",
     "Pref First Name", "Last Name", "Street Address", "Apt Number", "City", "State",
     "Zipcode", "Delivery Instructions", "Email", "Phone"
@@ -20,37 +28,48 @@ export_columns = [
 
 def main():
     project = init_project('Cascadia')
-    order_report = get_redcap_orders(project, 'Cascadia', '1144')
-    serial_report = get_redcap_orders(project, 'Cascadia', '1711')
-    serial_pts = serial_report['results_ptid'] if len(serial_report) else []
+    order_report = get_redcap_report(project, 'Cascadia', '1144')
+    serial_report = get_redcap_report(project, 'Cascadia', '1711')
 
+    serial_pts = serial_report['results_ptid'] if len(serial_report) else []
+    LOG.debug(f'Operating with <{len(serial_report)}> serial patients.')
+
+    # Set up each of the 10 possible barcode columns
     barcode_columns = [f'assign_barcode_{i}' for i in range(1, 10)]
 
-    orders = pd.DataFrame(columns=export_columns)
+    orders = pd.DataFrame(columns=EXPORT_COLUMNS)
     household_ids = set(i[0] for i in order_report.index)
 
     for house_id in household_ids:
-        ship = False
+        LOG.debug(f'Working on household <{house_id}>.')
+
+        # Each key in these dictionaries represents a patient_id and each
+        # value represents the number of kits they require. See example below.
         kits_needed = {
             'resupply': {},  # {"0": 2, "1": 1, "3": 4}
             'welcome': {},  # {"2": 1}
             'serial': {}  # {"6": 1}
         }
 
-        participants = set(i[1] for i in order_report.index
-                           if i[0] == house_id and i[1] != 'household_arm_1')
+        participants = set(
+            i[1] for i in order_report.index if i[0] == house_id and i[1] != 'household_arm_1'
+        )
+        LOG.debug(f'<{len(participants)}> participants exist within household <{house_id}>')
 
         for participant in participants:
+            LOG.debug(f'Working on participant <{participant}>.')
             pt_data = order_report.loc[[(house_id, participant)]]
 
-            # the patient should be enrolled and consented to get any kits
+            # the participant should be enrolled and consented to get any kits
             if not (any(pt_data['enrollment_survey_complete'] == 2) and any(pt_data['consent_form_complete'] == 2)):
+                LOG.debug(f'Participant <{participant}> must be consented and enrolled to receive swab kits.')
                 continue
 
-            # if no swab barcodes have been completed they need a welcome kit
+            # if no swab barcodes have been completed they need a welcome kit and won't need anything else
             if not any(pt_data['swab_barcodes_complete'] == 2):
+                LOG.debug(f'Participant <{participant}> has no complete swabs. Adding a welcome kit to their inventory.')
                 kits_needed['welcome'][participant] = 1
-                continue # if they dont have welcome kit yet, they definitely don't need anything else
+                continue
 
             # current barcodes a pt has
             kit_barcodes = pt_data.loc[
@@ -62,27 +81,21 @@ def main():
                 pt_data['redcap_repeat_instrument'] == 'symptom_survey', 'ss_return_tracking'
             ].count()
 
-            # if a pt has less than 3 total kits they will need more shipped
             num_kits = kit_barcodes - kit_returns
-            if num_kits < 3:
-                ship = True
+            LOG.debug(f'Participant has total <{kit_barcodes}> kits with <{kit_returns}> returned. {num_kits} usable kits.')
 
-            # number of kits needed to get inventory to 6
-            kits_needed['resupply'][participant] = max(6 - num_kits, 0)
+            if num_kits < 3:
+                LOG.debug(f'Resupplying {kits_needed["resupply"][participant]} kits to participant <{participant}>.')
+                kits_needed['resupply'][participant] = max(6 - num_kits, 0)
 
             if any(pt_data['es_ptid'].isin(serial_pts)):
+                LOG.debug(f'Participant is starting serial swab program. Adding a serial kit to their inventory.')
                 kits_needed['serial'][participant] = 1
 
-        if kits_needed['welcome'] or ship or kits_needed['serial']:
+        if kits_needed['welcome'] or kits_needed['resupply'] or kits_needed['serial']:
             address = get_household_address(order_report, house_id)
 
-        # send welcome kits to patients in a household that are enrolled
-        if kits_needed['welcome']:
-            welcome_kits_needed = sum(kits_needed['welcome'].values())
-            orders = append_order(orders, house_id, 3, welcome_kits_needed, address)
-
-        # resupply entire house
-        if ship:
+        if kits_needed['resupply']:
             resupply_kits_needed = sum(kits_needed['resupply'].values())
             orders = append_order(orders, house_id, 1, resupply_kits_needed, address)
 
@@ -90,7 +103,14 @@ def main():
             for pt, _ in kits_needed['serial'].items():
                 orders = append_order(orders, house_id, 2, 1, address)
 
-    export_orders(orders)
+        if kits_needed['welcome']:
+            welcome_kits_needed = sum(kits_needed['welcome'].values())
+            orders = append_order(orders, house_id, 3, welcome_kits_needed, address)
+
+    export_orders(orders, f'data/USPSOrder{datetime.now().strftime("%Y_%m_%d_%H_%M")}.csv')
+
+    LOG.info(f"Orders saved. Summary of orders generated by this run: \n \
+        {orders.groupby(['Project Name']).size().reset_index(name='counts')}")
 
 
 def append_order(orders, household, sku, quantity, address):
@@ -99,12 +119,15 @@ def append_order(orders, household, sku, quantity, address):
     """
     # don't append orders lacking a valid address
     if any(pd.isna(address['Street Address'])) and any(pd.isna(address['City'])) and any(pd.isna(address['State'])):
+        LOG.warning(f'No valid address for household <{household}>. Skipping order.')
         return orders
 
     if quantity > 20 and sku == 1:  # seperate replenishment kits into other order becaues of max shippment size
+        LOG.debug(f'Splitting resupply order for household <{household}> because needed kits > 20.')
         orders = append_order(orders, household, sku, quantity - 20, address)
         quantity = 20
-    if quantity > 4 and sku == 3:  # seperate welcome kits into other order because of max shippment size
+    elif quantity > 4 and sku == 3:  # seperate welcome kits into other order because of max shippment size
+        LOG.debug(f'Splitting welcome order for household <{household}> because welcome kits > 4.')
         orders = append_order(orders, household, sku, quantity - 4, address)
         quantity = 4
 
@@ -113,6 +136,7 @@ def append_order(orders, household, sku, quantity, address):
     address['OrderID'] = generate_order_number(address, orders)
     address['Household ID'] = household
 
+    LOG.info(f'Appending order with <{quantity}> kits of type <{sku}> destined for household <{household}>.')
     return pd.concat([orders, address], join='inner', ignore_index=True)
 
 
@@ -128,22 +152,21 @@ def get_household_address(household_records, house_id):
     # additional dropoff instructions
     address['Pref First Name']       = get_best_first_name(enroll_address)
     address['Last Name']             = enroll_address['Last Name']
-    address['Email']                 = enroll_address['Phone']
+    address['Email']                 = enroll_address['Email']
     address['Phone']                 = enroll_address['Phone']
     address['Delivery Instructions'] = enroll_address['Delivery Instructions']
 
-    address['Project Name'] = 'Cascadia_SEA' if address[
-        'Project Name'
-    ].values == 2 else 'Cascadia_PDX'
-    address['Zipcode'] = address['Zipcode'].astype(int) if not pd.isna(
-        address['Zipcode'].values
-    ) else ''
+    LOG.debug(f'Setting address region and zipcode.')
+    address['Project Name'] = 'Cascadia_SEA' if address['Project Name'].values == 2 else 'Cascadia_PDX'
+    address['Zipcode'] = address['Zipcode'].astype(int) if not pd.isna(address['Zipcode'].values) else ''
 
-    return address[address.columns.intersection(export_columns)]
+    return address[address.columns.intersection(EXPORT_COLUMNS)]
 
 
 def get_most_recent_address(household_records):
     """Get the most recent address provided by a household"""
+    LOG.debug(f'Trying to select the most recent address for record <{household_records.index}>.')
+
     # get a households symptom surveys, which may hold additional addresses
     symptom_surveys = household_records[household_records['redcap_repeat_instrument'] == 'symptom_survey'].copy()
     symptom_surveys['ss_date_1'] = symptom_surveys['ss_date_1'].astype('datetime64')
@@ -162,6 +185,7 @@ def get_most_recent_address(household_records):
                         ].copy()
 
     if not complete_addresses.empty:
+        LOG.debug(f'Address found within participant symptom surveys, updating participant address.')
         complete_addresses['Street Address'] = complete_addresses['Street Address 2']
         complete_addresses['Apt Number'] = complete_addresses['Apt Number 2']
         complete_addresses['City'] = complete_addresses['City 2']
@@ -170,6 +194,7 @@ def get_most_recent_address(household_records):
 
         return complete_addresses.iloc[[0]]
     else:
+        LOG.debug(f'No symptom survey address found, using Head of Household enrollment address.')
         return None
 
 
@@ -186,6 +211,8 @@ def get_enrollment_address(household_records):
     head_of_house_idx = int(tmp.iloc[
         tmp["HH Reporter"].notna().idxmax()
     ]['HH Reporter'])
+
+    LOG.debug(f'Fetching Head of Household enrollment address at index <{head_of_house_idx}>.')
     return household_records.loc[[f'{head_of_house_idx}_arm_1']].query('redcap_repeat_instrument.isna()')
 
 
@@ -198,6 +225,8 @@ def generate_order_number(address, orders):
             l = list(order_id)
             l[len(l) - 1] = chr(ord(l[len(l) - 1]) + 1)
             order_id = ''.join(l)
+
+    LOG.debug(f'Generated unique order_id <{order_id}>.')
     return order_id
 
 
@@ -208,18 +237,23 @@ def get_best_first_name(enroll_address):
     '''
     pref_first_name = enroll_address.iloc[0]['Pref First Name']
     if not pd.isna(pref_first_name):
+        LOG.debug(f'Using participant preferred first name.')
         return pref_first_name
     else:
+        LOG.debug(f'Using participant legal first name.')
         return enroll_address.iloc[0]['First Name']
 
 
-def export_orders(orders):
+def export_orders(orders, fp):
     # print(orders.groupby(['Project Name']).size() \
     #             .reset_index(name='counts'))
-    orders.to_csv(path.join(
-        base_dir,
-        f'data/USPSOrder{datetime.now().strftime("%Y_%m_%d_%H_%M")}.csv'),
-                  index=False)
+    LOG.debug(f'Outputting order form to destination: <{fp}>.')
+    orders.to_csv(
+        path.join(
+            base_dir,
+            fp
+        ), index=False
+    )
 
 
 if __name__ == '__main__':
