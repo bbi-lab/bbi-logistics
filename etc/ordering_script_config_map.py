@@ -1,4 +1,4 @@
-project_dict = {
+PROJECT_DICT = {
     "HCT": {
         "project_id": "148",
         "Report Id": "1924",

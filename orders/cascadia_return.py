@@ -8,6 +8,8 @@ import pandas as pd
 import envdir
 import requests
 import logging
+from delivery_express_order import init_project, get_redcap_report, format_longitudinal, assign_cascadia_location
+
 
 base_dir = path.abspath(__file__ + "/../../")
 envdir.open(path.join(base_dir, '.env/de'))
@@ -22,22 +24,26 @@ PROJECT = "Cascadia"
 
 def main():
     redcap_project = init_project(PROJECT)
-    redcap_orders = get_redcap_orders(redcap_project, PROJECT)
+    redcap_orders = get_redcap_report(redcap_project, PROJECT)
 
     if len(redcap_orders) == 0:
         LOG.info(f'No orders to process, exiting...')
         return
 
-    redcap_orders = format_longitudinal(PROJECT, redcap_orders)
-    redcap_orders['Project Name'] = redcap_orders.apply(
-        lambda row: assign_project(row, PROJECT), axis=1
-    )
+    redcap_orders = format_longitudinal(redcap_orders, PROJECT)
+    redcap_orders = assign_cascadia_location(redcap_orders)
+
     redcap_orders = redcap_orders.astype({'Record Id': int})
     redcap_orders['orderId'] = redcap_orders.dropna(
         subset=['Record Id']).apply(get_de_orders, axis=1
     )
     formatted_import = format_orders_import(redcap_orders)
-    redcap_project.import_records(formatted_import, overwrite='overwrite')
+
+    if len(formatted_import):
+        LOG.info(f'Importing {len(formatted_import)} new return orders to REDCap.')
+        #redcap_project.import_records(formatted_import, overwrite='overwrite')
+    else:
+        LOG.info('No new return orders remain after filtering. No imports necessary to REDCap.')
 
 
 def get_de_orders(redcap_order: pd.Series):
@@ -96,7 +102,7 @@ def extract_data(redcap_order: pd.Series, de_orders: dict):
 
 
 def format_orders_import(orders):
-    LOG.debug(f'Formatting <{len(orders)}> for import to REDCap.')
+    LOG.debug(f'Formatting and verifying record <{len(orders)}> for import to REDCap.')
     return orders[
         ['orderId', 'redcap_repeat_instance', 'redcap_repeat_instrument']
     ].dropna(
@@ -107,5 +113,4 @@ def format_orders_import(orders):
 
 
 if __name__ == "__main__":
-    from delivery_express_order import init_project, get_redcap_orders, format_longitudinal, assign_project
     main()
