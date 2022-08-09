@@ -41,7 +41,7 @@ def main():
 
     if len(formatted_import):
         LOG.info(f'Importing {len(formatted_import)} new return orders to REDCap.')
-        #redcap_project.import_records(formatted_import, overwrite='overwrite')
+        redcap_project.import_records(formatted_import, overwrite='overwrite')
     else:
         LOG.info('No new return orders remain after filtering. No imports necessary to REDCap.')
 
@@ -92,7 +92,7 @@ def extract_data(redcap_order: pd.Series, de_orders: dict):
         if (created_date > order_date):
             # referenceNumber1 record id
             # referenceNumber3 project
-            LOG.info(f'Updating REDCap record with <{order["orderId"]}>.')
+            LOG.info(f'Preparing to update REDCap record with <{order["orderId"]}>.')
             return order['orderId']
         else:
             LOG.debug(f'DE Order creation date was before REDCap order creation date ({created_date.date()} < {order_date.date()}). Skipping order.')
