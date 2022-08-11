@@ -85,12 +85,13 @@ def main():
             LOG.debug(f'Participant has total <{kit_barcodes}> kits with <{kit_returns}> returned. {num_kits} usable kits.')
 
             if num_kits < 3:
-                LOG.debug(f'Resupplying {kits_needed["resupply"][participant]} kits to participant <{participant}>.')
                 kits_needed['resupply'][participant] = max(6 - num_kits, 0)
+                LOG.debug(f'Resupplying {kits_needed["resupply"][participant]} kits to participant <{participant}>.')
 
             if any(pt_data['es_ptid'].isin(serial_pts)):
-                LOG.debug(f'Participant is starting serial swab program. Adding a serial kit to their inventory.')
                 kits_needed['serial'][participant] = 1
+                LOG.debug(f'Participant is starting serial swab program. Adding a serial kit to their inventory.')
+
 
         if kits_needed['welcome'] or kits_needed['resupply'] or kits_needed['serial']:
             address = get_household_address(order_report, house_id)
