@@ -143,8 +143,8 @@ def append_order(orders, household, sku, quantity, address):
 
 def get_household_address(household_records, house_id):
     """Get the most up to date address from a household"""
-    enroll_address = get_enrollment_address(household_records.loc[house_id])
-    updated_address = get_most_recent_address(household_records.loc[house_id])
+    enroll_address = get_enrollment_address(household_records.loc[house_id], house_id)
+    updated_address = get_most_recent_address(household_records.loc[house_id], house_id)
 
     # use the more recent symptom survey address if one exists
     address = enroll_address if updated_address is None else updated_address
@@ -164,9 +164,9 @@ def get_household_address(household_records, house_id):
     return address[address.columns.intersection(EXPORT_COLUMNS)]
 
 
-def get_most_recent_address(household_records):
+def get_most_recent_address(household_records, house_id):
     """Get the most recent address provided by a household"""
-    LOG.debug(f'Trying to select the most recent address for record <{household_records.index}>.')
+    LOG.debug(f'Trying to select the most recent address for household records <{household_records.index}> in household <{house_id}>.')
 
     # get a households symptom surveys, which may hold additional addresses
     symptom_surveys = household_records[household_records['redcap_repeat_instrument'] == 'symptom_survey'].copy()
@@ -199,21 +199,14 @@ def get_most_recent_address(household_records):
         return None
 
 
-def get_enrollment_address(household_records):
+def get_enrollment_address(household_records, house_id):
     """
     Get the address from the head of household in a passed household's
     enrollment event.
     """
-    # get the head of house id, which is the first non NaN value in this household's data set.
-    # We have to reset the index to avoid a duplicated index error and then grab the index of the
-    # actual head of house record based on the head of house id
-    tmp = household_records.copy()
-    tmp.reset_index(level=0, inplace=True)
-    head_of_house_idx = int(tmp.iloc[
-        tmp["HH Reporter"].notna().idxmax()
-    ]['HH Reporter'])
+    head_of_house_idx = get_head_of_household(household_records, house_id)
 
-    LOG.debug(f'Fetching Head of Household enrollment address at index <{head_of_house_idx}>.')
+    LOG.debug(f'Fetching Head of Household enrollment address at index <{head_of_house_idx}> for household <{house_id}>.')
     return household_records.loc[[f'{head_of_house_idx}_arm_1']].query('redcap_repeat_instrument.isna()')
 
 
@@ -243,6 +236,26 @@ def get_best_first_name(enroll_address):
     else:
         LOG.debug(f'Using participant legal first name.')
         return enroll_address.iloc[0]['First Name']
+
+
+def get_head_of_household(household_records, house_id):
+    """Gets the head of household index for a given household"""
+
+    # get the head of house id, which is the first non NaN value in this household's data set.
+    # We have to reset the index to avoid a duplicated index error and then grab the index of the
+    # actual head of house record based on the head of house id
+    tmp = household_records.copy()
+    tmp.reset_index(level=0, inplace=True)
+    head_of_house_idx = tmp.iloc[tmp["HH Reporter"].notna().idxmax()]['HH Reporter']
+
+    # Fallback on the first participant in a household if there is no head of household set
+    if pd.isna(head_of_house_idx):
+        head_of_house_idx = 0
+        LOG.warning(f"No Head of Household detected for household <{house_id}>, falling back to index <{head_of_house_idx}>.")
+    else:
+        LOG.debug(f"Found index <{int(head_of_house_idx)}> to be the head of household for household <{house_id}>.")
+
+    return int(head_of_house_idx)
 
 
 def export_orders(orders, fp):
