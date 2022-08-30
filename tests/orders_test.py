@@ -15,7 +15,8 @@ sys.path.append(str(path_root))
 
 # pylint: disable=import-error, wrong-import-position
 import orders.delivery_express_order as de
-from etc.redcap_variable_map import project_dict
+import orders.utils.redcap as redcap_utils
+from etc.ordering_script_config_map import PROJECT_DICT
 
 
 class TestDEOrderGeneration(unittest.TestCase):
@@ -24,19 +25,19 @@ class TestDEOrderGeneration(unittest.TestCase):
     def test_redcap_connection(self):
         # boolean statement if get_redcap_orders() throws no errors
         # later on loop through each project classification
-        for project in project_dict:
+        for project in PROJECT_DICT:
             with self.subTest(project=project):
                 try:
-                    redcap_project = de.init_project(project)
-                    de.get_redcap_orders(redcap_project, project)
+                    redcap_project = redcap_utils.init_project(project)
+                    redcap_utils.get_redcap_orders(redcap_project, project)
                 # pylint: disable=broad-except
                 except BaseException as error:
                     self.fail(f"get_redcap_orders failed with {error}")
 
     def test_order_gen(self):
-        for project in project_dict:  #(p for p in project_dict if p == 'AIRS'):
+        for project in PROJECT_DICT:  #(p for p in PROJECT_DICT if p == 'AIRS'):
             with self.subTest(project=project):
-                redcap_project = de.init_project(project)
+                redcap_project = redcap_utils.init_project(project)
                 proj_name = project.replace(" ", "_").lower()
 
                 mock_csv = path.join(
@@ -45,7 +46,7 @@ class TestDEOrderGeneration(unittest.TestCase):
                 redcap_report = open(mock_csv, 'r', encoding='utf8')
                 with patch('orders.delivery_express_order.Project._call_api',
                            return_value=(redcap_report.read(), '')):
-                    actual_orders = de.get_redcap_orders(
+                    actual_orders = redcap_utils.get_redcap_orders(
                         redcap_project, project)
                 redcap_report.close()
 

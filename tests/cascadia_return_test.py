@@ -10,6 +10,7 @@ path_root = Path(__file__).parents[1]
 sys.path.append(str(path_root))
 
 # pylint: disable=import-error, wrong-import-position
+import orders.utils.redcap as redcap_utils
 import orders.delivery_express_order as de
 import orders.cascadia_return as cr
 
@@ -18,14 +19,14 @@ class TestCascadiaReturn(unittest.TestCase):
 
     def setUp(self):
         project = 'Cascadia'
-        redcap_project = de.init_project(project)
+        redcap_project = redcap_utils.init_project(project)
 
         mock_csv = path.join(path_root,
                              'tests/data/cascadia/cascadia_mock_report.csv')
         redcap_report = open(mock_csv, 'r', encoding='utf8')
         with patch('orders.delivery_express_order.Project._call_api',
                    return_value=(redcap_report.read(), '')):
-            redcap_orders = de.get_redcap_orders(redcap_project, project)
+            redcap_orders = redcap_utils.get_redcap_orders(redcap_project, project)
         redcap_report.close()
 
         redcap_orders = de.format_longitudinal(project, redcap_orders)
