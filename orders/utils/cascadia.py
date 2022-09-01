@@ -204,3 +204,29 @@ def get_head_of_household(household_records, house_id):
         LOG.debug(f"Found index <{int(head_of_house_idx)}> to be the head of household for household <{house_id}>.")
 
     return int(head_of_house_idx)
+
+
+def participant_under_study_pause(study_pauses, household_id, participant_index):
+    """Determines whether a given participant has their study paused at the moment"""
+    LOG.debug(f'Determining study pause status for participant <{participant_index}> in household <{household_id}>.')
+
+    # Participant can't be on a pause if they do not exist in the pause report
+    if not any(study_pauses.index.isin([((household_id, participant_index))])):
+        LOG.debug(f'Participant <{participant_index}> in household <{household_id}> is not currently under a study pause.')
+        return False
+
+    participant_pauses = study_pauses.loc[(household_id, participant_index),:]
+    current_date = datetime.datetime.today().strftime('%Y-%m-%d')
+
+    # Grab any currently active pauses from the df of participant pause date ranges
+    active_pauses = participant_pauses[
+        (participant_pauses['cl_study_pause_start'] <= current_date) &
+        (participant_pauses['cl_study_pause_end'] >= current_date)
+    ]
+
+    if not active_pauses.empty:
+        LOG.debug(f'Participant <{participant_index}> in household <{household_id}> is under a study pause until <{active_pauses.iloc[-1]["cl_study_pause_end"]}>')
+        return True
+    else:
+        LOG.debug(f'Participant <{participant_index}> in household <{household_id}> is not currently under a study pause.')
+        return False

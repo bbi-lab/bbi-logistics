@@ -87,3 +87,14 @@ def get_redcap_report(redcap_project, project_name, report_id = None):
 
     LOG.debug(f'Original report <{report_id}> for project <{project_name}> has <{len(report)}> rows.')
     return report.sort_index()
+
+
+def get_cascadia_study_pause_reports(project):
+    """Gets and concatenates Cascadia study pauses into one report"""
+    LOG.debug(f'Fetching <{len(STUDY_PAUSE_REPORT_IDS)}> Cascadia study pause reports.')
+    cascadia_study_pauses = pd.concat(
+        [get_redcap_report(project, 'Cascadia', report_id) for report_id in STUDY_PAUSE_REPORT_IDS]
+    )
+
+    LOG.debug(f'Concatenated pause report has <{len(cascadia_study_pauses)}> pause events.')
+    return cascadia_study_pauses.sort_index()
