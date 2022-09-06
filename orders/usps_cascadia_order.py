@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import os, sys, logging, envdir, datetime
 import pandas as pd
-from utils.redcap import init_project, get_redcap_report
+from utils.redcap import init_project, get_redcap_report, get_cascadia_study_pause_reports
 from utils.common import USPS_EXPORT_COLS, export_orders
-from utils.cascadia import append_order, get_household_address
+from utils.cascadia import append_order, get_household_address, participant_under_study_pause
 
 # Place all modules within this script's path
 BASE_DIR = os.path.abspath(__file__ + "/../../")
@@ -24,6 +24,7 @@ def main():
     project = init_project(PROJECT)
     order_report = get_redcap_report(project, PROJECT, '1144')
     serial_report = get_redcap_report(project, PROJECT, '1711')
+    pause_report = get_cascadia_study_pause_reports(project)
 
     serial_pts = serial_report['results_ptid'] if len(serial_report) else []
     LOG.debug(f'Operating with <{len(serial_report)}> serial patients.')
@@ -63,6 +64,10 @@ def main():
             if not any(pt_data['swab_barcodes_complete'] == 2):
                 LOG.debug(f'Participant <{participant}> has no complete swabs. Adding a welcome kit to their inventory.')
                 kits_needed['welcome'][participant] = 1
+                continue
+
+            if participant_under_study_pause(pause_report, house_id, participant):
+                LOG.info(f'Participant <{participant}> from household <{house_id}> is under study pause. Deliveries are stopped until the pause end date.')
                 continue
 
             # current barcodes a pt has
