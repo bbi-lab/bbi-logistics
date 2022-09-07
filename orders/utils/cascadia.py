@@ -14,6 +14,8 @@ PROJECT_NAME_MAP = {
     2: 'Cascadia_SEA'
 }
 
+BARCODE_COLUMNS = [f'assign_barcode_{i}' for i in range(1, 10)]
+
 
 def assign_cascadia_location(orders):
     '''Assign orders to the desired Cascadia sublocation'''
@@ -247,3 +249,43 @@ def participant_under_study_pause(study_pauses, household_id, participant_index)
     else:
         LOG.debug(f'Participant <{participant_index}> in household <{household_id}> is not currently under a study pause.')
         return False
+
+
+def household_needs_resupply(house_id, participants, order_report, threshold=3):
+    """
+    Check if any participant in a household is in need of a resupply. This is true if they
+    have less kits than the passed threshold number.
+    """
+
+    for participant in participants:
+        pt_data = order_report.loc[[(house_id, participant)]]
+
+        if not (any(pt_data['enrollment_survey_complete'] == 2) and any(pt_data['consent_form_complete'] == 2)):
+            LOG.debug(f'Participant <{participant}> must be consented and enrolled to qualify for resupply swab kits.')
+            continue
+
+        num_kits = get_participant_kit_count(pt_data)
+
+        if num_kits < threshold:
+            LOG.debug(f'Participant <{participant}> needs a resupply. Triggering resupply for all participants in household <{house_id}>.')
+            return True
+
+    LOG.debug(f'No participants in household <{house_id}> are in need of a resupply.')
+    return False
+
+
+def get_participant_kit_count(pt_data):
+    """Gets the number of kits a participant currently has in their possession"""
+
+    # current barcodes a pt has
+    assigned_barcodes = pt_data.loc[
+        pt_data['redcap_repeat_instrument'] == 'swab_barcodes', BARCODE_COLUMNS
+    ].notna().sum(axis=1).sum()
+
+    # current barcodes a pt has returned
+    returned_barcodes = pt_data.loc[
+        pt_data['redcap_repeat_instrument'] == 'symptom_survey', 'ss_return_tracking'
+    ].count()
+
+    LOG.debug(f'Found <{assigned_barcodes}> assigned barcodes with <{returned_barcodes}> returned.')
+    return assigned_barcodes - returned_barcodes
