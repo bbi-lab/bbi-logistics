@@ -9,6 +9,11 @@ logging.basicConfig()
 LOG = logging.getLogger(__name__)
 LOG.setLevel(LOG_LEVEL)
 
+PROJECT_NAME_MAP = {
+    1: 'Cascadia_PDX',
+    2: 'Cascadia_SEA'
+}
+
 
 def assign_cascadia_location(orders):
     '''Assign orders to the desired Cascadia sublocation'''
@@ -97,16 +102,15 @@ def get_household_address(household_records, house_id):
     # use the more recent symptom survey address if one exists
     address = enroll_address if updated_address is None else updated_address
 
-    # always use original delivery instructions since symptom survey has no
-    # additional dropoff instructions
+    # always use original delivery instructions, email, phone, and last name
+    # since symptom survey occassionally does not have these fields
     address['Pref First Name']       = get_best_first_name(enroll_address)
     address['Last Name']             = enroll_address['Last Name']
     address['Email']                 = enroll_address['Email']
     address['Phone']                 = enroll_address['Phone']
     address['Delivery Instructions'] = enroll_address['Delivery Instructions']
 
-    LOG.debug(f'Setting address region and zipcode.')
-    address['Project Name'] = 'Cascadia_SEA' if address['Project Name'].values == 2 else 'Cascadia_PDX'
+    address['Project Name'] = find_and_map_project_assignment(household_records.loc[house_id], house_id)
     address['Zipcode'] = address['Zipcode'].astype(int) if not pd.isna(address['Zipcode'].values) else ''
 
     return address[address.columns.intersection(USPS_EXPORT_COLS)]
@@ -145,6 +149,19 @@ def get_most_recent_address(household_records, house_id):
     else:
         LOG.debug(f'No symptom survey address found, using Head of Household enrollment address.')
         return None
+
+
+def find_and_map_project_assignment(household_records, house_id):
+    """Gets the project name for a given household"""
+    project_name = int(household_records.query('`Project Name`.notna()')['Project Name'].values)
+    project_name = PROJECT_NAME_MAP.get(project_name, None)
+
+    if project_name:
+        LOG.debug(f'Assigned project <{project_name}> to househould <{house_id}>.')
+    else:
+        LOG.warning(f'No valid project found for household <{house_id}>.')
+
+    return project_name
 
 
 def get_enrollment_address(household_records, house_id):
