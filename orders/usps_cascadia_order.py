@@ -3,7 +3,7 @@ import os, sys, logging, envdir, datetime
 import pandas as pd
 from utils.redcap import init_project, get_redcap_report, get_cascadia_study_pause_reports
 from utils.common import USPS_EXPORT_COLS, export_orders
-from utils.cascadia import append_order, get_household_address, participant_under_study_pause
+from utils.cascadia import append_order, get_household_address, participant_under_study_pause, household_needs_resupply, get_participant_kit_count
 
 # Place all modules within this script's path
 BASE_DIR = os.path.abspath(__file__ + "/../../")
@@ -19,6 +19,7 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(LOG_LEVEL)
 
 PROJECT = 'Cascadia'
+MAX_KITS = 6
 
 def main():
     project = init_project(PROJECT)
@@ -28,9 +29,6 @@ def main():
 
     serial_pts = serial_report['results_ptid'] if len(serial_report) else []
     LOG.debug(f'Operating with <{len(serial_report)}> serial patients.')
-
-    # Set up each of the 10 possible barcode columns
-    barcode_columns = [f'assign_barcode_{i}' for i in range(1, 10)]
 
     orders = pd.DataFrame(columns=USPS_EXPORT_COLS)
     household_ids = set(i[0] for i in order_report.index)
@@ -51,6 +49,11 @@ def main():
         )
         LOG.debug(f'<{len(participants)}> participants exist within household <{house_id}>')
 
+        # first need to check if any participants in a househould need a resupply. If they do, we will
+        # be resupplying ALL participants in the househould, even if they don't necessarily need it.
+        needs_resupply = household_needs_resupply(house_id, participants, order_report, threshold=3)
+        LOG.debug(f'Resupply is set to <{needs_resupply}> for household <{house_id}>.')
+
         for participant in participants:
             LOG.debug(f'Working on participant <{participant}>.')
             pt_data = order_report.loc[[(house_id, participant)]]
@@ -70,26 +73,18 @@ def main():
                 LOG.info(f'Participant <{participant}> from household <{house_id}> is under study pause. Deliveries are stopped until the pause end date.')
                 continue
 
-            # current barcodes a pt has
-            kit_barcodes = pt_data.loc[
-                pt_data['redcap_repeat_instrument'] == 'swab_barcodes', barcode_columns
-            ].notna().sum(axis=1).sum()
+            if needs_resupply:
+                num_kits = get_participant_kit_count(pt_data)
+                LOG.debug(f'Participant has total {num_kits} usable kits.')
 
-            # current barcodes a pt has returned
-            kit_returns = pt_data.loc[
-                pt_data['redcap_repeat_instrument'] == 'symptom_survey', 'ss_return_tracking'
-            ].count()
-
-            num_kits = kit_barcodes - kit_returns
-            LOG.debug(f'Participant has total <{kit_barcodes}> kits with <{kit_returns}> returned. {num_kits} usable kits.')
-
-            if num_kits < 3:
-                kits_needed['resupply'][participant] = max(6 - num_kits, 0)
+                kits_needed['resupply'][participant] = max(MAX_KITS - num_kits, 0)
                 LOG.debug(f'Resupplying {kits_needed["resupply"][participant]} kits to participant <{participant}>.')
 
             if any(pt_data['es_ptid'].isin(serial_pts)):
                 kits_needed['serial'][participant] = 1
                 LOG.debug(f'Participant is starting serial swab program. Adding a serial kit to their inventory.')
+
+            LOG.debug(f'Finished working on participant <{participant}>.')
 
 
         if kits_needed['welcome'] or kits_needed['resupply'] or kits_needed['serial']:
