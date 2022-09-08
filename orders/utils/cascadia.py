@@ -89,7 +89,7 @@ def append_order(orders, household, sku, quantity, address):
 
     address['SKU'] = sku
     address['Quantity'] = quantity
-    address['OrderID'] = generate_order_number(address, orders)
+    address['OrderID'] = generate_order_number(orders, household)
     address['Household ID'] = household
 
     LOG.info(f'Appending order with <{quantity}> kits of type <{sku}> destined for household <{household}>.')
@@ -98,11 +98,12 @@ def append_order(orders, household, sku, quantity, address):
 
 def get_household_address(household_records, house_id):
     """Get the most up to date address from a household"""
-    enroll_address = get_enrollment_address(household_records.loc[house_id], house_id)
+    enroll_address = get_enrollment_address(household_records.loc[house_id], house_id).reset_index()
     updated_address = get_most_recent_address(household_records.loc[house_id], house_id)
 
-    # use the more recent symptom survey address if one exists
-    address = enroll_address if updated_address is None else updated_address
+    # use the more recent symptom survey address if one exists. We have to reset the index since
+    # these can be a combo of participants depending on who the head of household might be.
+    address = enroll_address if updated_address is None else updated_address.reset_index()
 
     # always use original delivery instructions, email, phone, and last name
     # since symptom survey occassionally does not have these fields
@@ -177,8 +178,9 @@ def get_enrollment_address(household_records, house_id):
     return household_records.loc[[f'{head_of_house_idx}_arm_1']].query('redcap_repeat_instrument.isna()')
 
 
-def generate_order_number(address, orders):
-    order_id = f'{datetime.datetime.now().strftime("%y%m%d")}{address.index[0][0]}'
+def generate_order_number(orders, house_id):
+    """Generates a unique order number from the date and house id"""
+    order_id = f'{datetime.datetime.now().strftime("%y%m%d")}_{house_id}'
     while order_id in orders['OrderID'].values:
         if (not order_id[len(order_id) - 1].isalpha()):
             order_id = order_id + 'a'
