@@ -13,6 +13,7 @@ gspread = "*"
 XlsxWriter = "*"
 csv-diff = "*"
 pycap = "~=1.1"
+boto3 = "*"
 
 [dev-packages]
 yapf = "*"
