@@ -1,5 +1,5 @@
 """Shared order utilities for redcap project data manipulation"""
-import os, logging
+import os, logging, glob
 import pandas as pd
 
 # Set up logging
@@ -101,3 +101,13 @@ def export_orders(orders, fp):
     """Export orders to a provided filepath `fp`"""
     LOG.debug(f'Exporting Orders to <{fp}>')
     orders.to_csv(fp, index=False)
+
+
+def most_recent_matching_order(data_dir, name_format):
+    """Gets the most recent file matching the delivery express order naming format"""
+    LOG.debug(f'Listing files matching format <{name_format}> within directory <{data_dir}>.')
+    list_of_files = glob.glob(os.path.join(data_dir, name_format))
+
+    most_recent_file = max(list_of_files, key=os.path.getctime)
+    LOG.debug(f'Found most recent file <{most_recent_file}>.')
+    return most_recent_file
