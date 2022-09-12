@@ -4,6 +4,7 @@ etc/fake.py
 .env/redcap/REDCAP_API_TOKEN*
 .env/de
 .env/email
+.env/aws
 .env/redcap_old
 .vscode
 __pycache__
