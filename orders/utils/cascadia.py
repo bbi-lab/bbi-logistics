@@ -56,7 +56,8 @@ def filter_cascadia_orders(orders):
         (orders['redcap_repeat_instrument'] == 'symptom_survey') &
         (orders['ss_return_tracking'].isna()) &
         any(orders[['Pickup 1', 'Pickup 2']].notna()) &
-        (orders['ss_trigger_swab'])
+        (orders['ss_trigger_swab']) &
+        (orders['symptom_survey_complete'])
     ].dropna(subset=['Order Date']
     ).query("~index.duplicated(keep='last')"
     ).apply(lambda record: use_best_address(enrollment_records, record), axis=1)
