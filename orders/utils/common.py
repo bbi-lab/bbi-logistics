@@ -8,6 +8,11 @@ logging.basicConfig()
 LOG = logging.getLogger(__name__)
 LOG.setLevel(LOG_LEVEL)
 
+# Logistics S3 paths
+LOGISTICS_S3_BUCKET = 'bbi-logistics-orders'
+LOGISTICS_DE_PATH = 'delivery_express'
+LOGISTICS_USPS_PATH = 'usps'
+
 # Export columns for Delivery Express pickup orders
 DE_EXPORT_COLS = [
     'Record Id', 'Today Tomorrow', 'Order Date', 'Project Name', 'First Name',
@@ -97,17 +102,10 @@ def format_id(orders, project, new_index = None):
     return orders
 
 
-def export_orders(orders, fp):
+def export_orders(orders, fp, s3=False):
     """Export orders to a provided filepath `fp`"""
     LOG.debug(f'Exporting Orders to <{fp}>')
-    orders.to_csv(fp, index=False)
-
-
-def most_recent_matching_order(data_dir, name_format):
-    """Gets the most recent file matching the delivery express order naming format"""
-    LOG.debug(f'Listing files matching format <{name_format}> within directory <{data_dir}>.')
-    list_of_files = glob.glob(os.path.join(data_dir, name_format))
-
-    most_recent_file = max(list_of_files, key=os.path.getctime)
-    LOG.debug(f'Found most recent file <{most_recent_file}>.')
-    return most_recent_file
+    if s3:
+        orders.to_csv(fp, index=False, storage_options={'s3_additional_kwargs': {'ServerSideEncryption': 'AES256'}})
+    else:
+        orders.to_csv(fp, index=False)
