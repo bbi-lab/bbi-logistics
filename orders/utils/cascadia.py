@@ -47,19 +47,22 @@ def filter_cascadia_orders(orders):
         )['Project Name'].values[0],axis=1
     )
 
-    # orders we must fulfill are symptom surveys without an existing tracking number
-    # which have a designated pickup time and have a swab trigger. We can drop records
-    # which do not have a order date. We only need to schedule max one pickup per
-    # participant so can simply keep the final index entry associated with them. Finally
-    # we should also apply the best address for each remaining row of the order sheet.
+    # Orders we must fulfill are symptom surveys without an existing tracking number
+    # which have a designated pickup time and have a completed symptom survey.
+    # We can also drop records which do not have a order date. We only need to schedule
+    # max one pickup per participant so can simply keep the final index entry associated
+    # with them.
     orders = orders[
         (orders['redcap_repeat_instrument'] == 'symptom_survey') &
         (orders['ss_return_tracking'].isna()) &
         any(orders[['Pickup 1', 'Pickup 2']].notna()) &
-        (orders['ss_trigger_swab'])
+        (orders['symptom_survey_complete'])
     ].dropna(subset=['Order Date']
     ).query("~index.duplicated(keep='last')"
     ).apply(lambda record: use_best_address(enrollment_records, record), axis=1)
+
+    # We only need to generate yesterday's orders
+    orders = get_yesterdays_orders(orders)
 
     # Set today tomorrow variable based on pickup time preference
     orders['Today Tomorrow'] = orders[['Pickup 1']].apply(lambda x: 0 if x['Pickup 1'] == 1 else 1, axis=1)
@@ -291,3 +294,11 @@ def get_participant_kit_count(pt_data):
 
     LOG.debug(f'Found <{assigned_barcodes}> assigned barcodes with <{returned_barcodes}> returned.')
     return assigned_barcodes - returned_barcodes
+
+
+def get_yesterdays_orders(orders):
+    """Filter order sheet to only yesterday's orders"""
+    yesterday = datetime.date.today() - datetime.timedelta(days=1)
+    LOG.info(f'Filtering orders to those requested on <{yesterday.strftime("%m-%d-%Y")}>.')
+
+    return orders[orders['Order Date'] == yesterday.strftime('%m-%d-%Y')]
