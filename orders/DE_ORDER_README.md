@@ -1,54 +1,56 @@
-# Delivery Express order README
-> `orders/delivery_express_order.py`
+# Delivery Express Ordering Script
 
-Delivery express (DE) ships and returns swab kits for SCAN, HCT, AIRS, and other projects as part of the S&S model. We send them an order file in `.csv` format with 1 row corresponding to 1 order with the following columns:
+Delivery express (DE) ships and returns swab kits for HCT, AIRS, Cascadia and other projects following the Swab and Send model. This script queries REDCap reports built to contain participants who need a swab pickup and uses them to create an order form in CSV format. This order form is then sent to Delivery Express to create the days' pickup schedule. Columns and their descriptions for the CSV form are included below.
 
-column | definition
+Column | Definition
 -|-
- Record Id | participant's redcap id
- Today Tomorrow | `0` or `1`. DE uses this coding to assign the pick up times. _ is a pick up in the evening the same day the order was shipped and _ is a pick up the next morning. 
- Order Date | When the order was placed i.e. when the corresponding redcap survey was completed
- Project Name | SCAN, HCT... Used for billing and in some cases, project specific business logic on DE's side i.e. if a line haul needs to be created
- First Name | 
- Last Name | 
- Street Address | 
- Apt Number | 
- City | 
- State | 
- Zipcode |
- Delivery Instructions | where the kit should be delivered
- Email | 
- Phone | 
- Notification Pref | what the participant prefers either `text` or `email` for delivery communication
- Pickup Location | where the kit should be picked up
- 
+ Record Id | The Participant's REDCap ID
+ Today Tomorrow | Either `0` or `1`. DE uses this coding to assign the pick up times.  is a pick up in the evening the same day the order was shipped and _ is a pick up the next morning.
+ Order Date | When the order was placed. This also corresponds to when the REDCap survey requesting the order was completed.
+ Project Name | Cascadia, HCT, etc. Used for billing, and in some cases, project specific business logic handled by Delivery Express. ex: if a line haul needs to be created
+ First Name | Participant's First Name
+ Last Name | Participant's Last Name
+ Street Address | Participant's Address Line 1
+ Apt Number | Participant's Address Line 2
+ City | Participant's City
+ State | Participant's State
+ Zipcode | Participant's Zip Code
+ Delivery Instructions | Where the swab kit should be delivered
+ Email | Participant's Email Address
+ Phone | Participant's Phone Number
+ Notification Pref | Either `email` or `text`. The preferred communication method of the participant for delivery related communication
+ Pickup Location | Where the swab kit should be picked up
 
-### External APIs
-The ordering script pulls data from various redcap projects. This data is compiled into a single order file and emailed to kittrack@uw.edu each morning at 6:45am. API keys are stored in `.env/redcap`. The script pulls from the following projects:
+### Environment Setup
+This script depends on [Pycap](https://github.com/redcap-tools/PyCap/releases/tag/1.1.3) (v1.1.3) for a wrapper to the REDCap API. You'll also need a local installation of [Pipenv](https://pipenv.pypa.io/en/latest/) and Python3 installed.
 
-- SCAN Eng
-- SCAN Span
-- SCAN Viet
-- SCAN Trad Chinese
-- SCAN Russina
-- HCT
-- AIRS
-- Cascadia
+You'll also need API keys for the Cascadia, HCT, and AIRS projects. These can be requested through the REDCap web application once you have access to the projects. If you are uploading data to S3, you will also need credentials from an account with access to the BBI logistics S3 bucket. The REDCap credentials are expected to be in a folder `.env/redcap` at the top level of this directory.
 
-### Dependencies
-This script depends on [Pycap](https://github.com/redcap-tools/PyCap/releases/tag/1.1.3) (v1.1.3) for a wrapper to the REDCap API.
+### Running the Script
 
-## Methods
+Create a virtual environment within the top level bbi-logistics directory with the command `pipenv install`. You can then run the command `envdir <path to aws credentials> pipenv run python3 orders/delivery_express_order.py` to run the script.
 
-The DE ordering script iterates through each key (project) in `etc/redcap_variable_map.py`, exports a report from redcap containing the orders for that day, then formats the data to align with the above schema. The formatting complexity depends on the project type
+You can pass the flag `--save` to the script to save the order form CSV to the `data/` directory at this repositories top level. Alternatively or in addition, you can pass the `--s3-upload` flag to upload the order form to the appropriate location within the logistics S3 bucket. By default, all order forms will be saved in the format `DeliveryExpressOrder_YYYY_MM_DD_HH_mm.csv`.
 
-### Cross-Sectional Proejcts
-These projects are the simpler of the two since all the needed data is already confined to 1 row.
+Logging is set to log INFO level log events by default. Set the environment variable `LOG_LEVEL` to one of `DEBUG, WARNING, ERROR` to change this behavior.
 
+### Deploying
 
-### Logitudinal Projects
+To deploy a new version of this script, ssh onto the AWS EC2 instance used to host the BBI Tableau Server. Navigate to the logistics directory and run `git pull` followed by `pipenv sync` to ensure all dependencies are up to date.
 
-These type of projects are more complex than cross-sectional because the nessesary data is split between two or more rows. Redcap splits this data because the surveys that collect this are part of different events; usually an enrollment and encounter event type. Below is an example of how this split would look for record_id 1:
+This script runs automatically through cron and is set to run at 6:40AM daily. Use `crontab -e` to edit the crontab controlling this behavior.
+
+### Project Strucuture
+
+The script exists within the main method of the file `delivery_express_order.py`. Supporting functions can be found in the utils module housed within the `orders/utils/` directory. The file `/etc/ordering_script_config_map.py` contains a dictionary with mappings for each of the project reports imported from REDCap. As noted above, credentials should be placed in an appropriate folder within the `/.env` directory. The default directory for saving order forms generated by this script it the `/data` directory.
+
+### REDCap Project Structure
+
+REDCap projects can exist in one of two structures. Cross-sectional projects are the simpler of the two, and all necessary data is present in a single row. We used to handle SCAN orders, which was a cross-sectional project, but it is now finished and we only handle longitudinal projects.
+
+#### Longitudinal Projects
+
+These type of projects are more complex than cross-sectional because the nessesary data is split between two or more rows. Redcap splits this data because the surveys that collect this are part of different events; usually an enrollment and encounter event type. Below is an example of how this split would look for an example record:
 
 record_id | event | name | address_1 | order_date | address_2
 -|-|-|-|-|-
@@ -57,13 +59,9 @@ record_id | event | name | address_1 | order_date | address_2
 
 Logitudinal projects will typically ask a participant for their address at enrollment then again when they request a swab kit to confirm. The script favors addresses provided when the participant requests a swab because this would be the most up to date. If an address is not provided during the encounter, the script will default to using the address in the enrollment event.
 
-The `use_best_address(original_address, row, event)` function takes:
-- `original_address` as a Pandas dataframe containing all the participant's addresses from the enrollment event i.e. which addresses should be used in case the encounter event does not have an address.
-- `row` as a Pandas series for a single order's encounter event. The script will check if this row has address info before defaulting to the original_address.
-- `event` as a string describing the redcap_event_name for the enrollment event. This is used to search the `orginal_address` dataframe for the order's address provided during enrollment. 
+The `use_best_address(enrollment_records, replacement_record, event='')` function takes:
+- `enrollment_records`: A Pandas dataframe containing all the participant's addresses from the enrollment event i.e. which addresses should be used in case the encounter event does not have an address.
+- `replacement_record`: A Pandas series for a single order's encounter event. The script will check if this row has valid address information and use it if it does. Otherwise we will default to the address information within the enrollment event.
+- `event` as a string describing the redcap_event_name for the enrollment event. This is used to search the `enrollment_records` dataframe for the order's address provided during enrollment.
 
-## Deployment
-This script is deployed on the private AWS EC2 instance used for the Tableau Server. The script is set to run at 6:45am usbing crontab.
-
-## Tests
-Tests for the order script have been created and are in `tests/order_test.py`. There are 2 tests. The first one checks if the script is able to export the data from each project. This covers the connection to redcap and if the report is working. The second one mocks the data from the order report and checks if the order script creats a .csv file that is the same as the expected output .csv. The data for these mocks and expected results are in `tests/data` for each project.
+Another aspect of longitudinal projects that makes them more difficult to work with is that participants have multiple encounters with the study. This script uses only the most recent encounter to generate addresses or to decide whether a participant needs an order generated for them.

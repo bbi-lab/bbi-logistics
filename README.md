@@ -1,28 +1,30 @@
 # Logistics
 Operational automation and dashboard updates for Brotman Baty Institute Logistics
 
-### Order script documentation:
+### Ordering Script Documentation
 - [Delivery Express](orders/DE_ORDER_README.md)
 - [USPS](orders/USPS_ORDER_README.md)
 
-### [Dashboards documentation](update_dashboards/DASHBOARD_README.md)
+### Dashboards Documentation
+- [Dashboard Updates](update_dashboards/DASHBOARD_README.md)
 
 ## Usage
 ```
-python3 orders/delivery_express_order.py
+envdir <aws credentials path> pipenv run python3 orders/delivery_express_order.py [--save] [--s3-upload]
+envdir <aws credentials path> pipenv run python3 orders/usps_cascadia_order.py [--save] [--s3-upload]
 ```
 
 ## Setup
 Clone the logistics repo
 ```
 cd ~/
-git clone https://github.com/cooperqmarshall/logistics.git
+git clone https://github.com/bbi-lab/bbi-logistics.git
 cd logistics
 ```
 
 Install required packages using:
 ```
-python3 -mpip install -r requirements.txt
+pipenv install
 ```
 
 ## Configure REDCap API Token environment variables
@@ -47,6 +49,14 @@ Remember to save your work!
 (Press `Y` then hit `Enter` to confirm the original save location.)
 
 Repeat this process for every SCAN REDCap project you need orders from.
+
+## Configure AWS Account Credentials
+```
+cd ~/logistics/.env
+mkdir aws
+```
+
+You'll also need your AWS access credentials for programmatic access to S3. Obtain your AWS Access Key ID and your AWS Secret Access Key. Create a file for each in the aws directory with `touch aws/AWS_ACCESS_KEY_ID` and `touch aws/AWS_SECRET_ACCESS_KEY`. Place your credentials within the respective files.
 
 ## Configure Google API Credentials
 > Only needed for dashboard updates
