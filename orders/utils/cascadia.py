@@ -30,39 +30,28 @@ def assign_cascadia_location(orders):
     return orders
 
 
-def filter_cascadia_orders(orders):
+def filter_cascadia_orders(orders, enrollments):
     '''Filters Cascadia `orders` to those that we need to create orders for'''
     LOG.debug(f'Filtering <{len(orders)}> Cascadia orders.')
 
-    # enrollment records are non symptom survey records
-    enrollment_records = orders[
-        orders['redcap_repeat_instrument'] != 'symptom_survey'
-    ].copy()
-
     # apply the project name mapping to each enrollment record. by default
     # it only appears on the first record.
-    enrollment_records['Project Name'] = enrollment_records.apply(
-        lambda x: enrollment_records.filter(
+    enrollments['Project Name'] = enrollments.apply(
+        lambda x: enrollments.filter(
             items=[(x.name[0], '0_arm_1')], axis=0
         )['Project Name'].values[0],axis=1
     )
 
     # Orders we must fulfill are symptom surveys without an existing tracking number
     # which have a designated pickup time and have a completed symptom survey.
-    # We can also drop records which do not have a order date. We only need to schedule
-    # max one pickup per participant so can simply keep the final index entry associated
-    # with them.
+    # We can also drop records which do not have a order date.
     orders = orders[
         (orders['redcap_repeat_instrument'] == 'symptom_survey') &
         (orders['ss_return_tracking'].isna()) &
         any(orders[['Pickup 1', 'Pickup 2']].notna()) &
-        (orders['symptom_survey_complete'])
+        (orders['symptom_survey_complete'] == 2)
     ].dropna(subset=['Order Date']
-    ).query("~index.duplicated(keep='last')"
-    ).apply(lambda record: use_best_address(enrollment_records, record), axis=1)
-
-    # We only need to generate yesterday's orders
-    orders = get_yesterdays_orders(orders)
+    ).apply(lambda record: use_best_address(enrollments, record), axis=1)
 
     # Set today tomorrow variable based on pickup time preference
     orders['Today Tomorrow'] = orders[['Pickup 1']].apply(lambda x: 0 if x['Pickup 1'] == 1 else 1, axis=1)
@@ -70,6 +59,7 @@ def filter_cascadia_orders(orders):
 
     orders = assign_cascadia_location(orders)
 
+    LOG.info(f'<{len(orders)}> orders remain for Cascadia after filtering.')
     return orders
 
 def append_order(orders, household, sku, quantity, address):

@@ -63,4 +63,5 @@ def filter_airs_orders(orders):
         lambda row: use_best_address(original_address, row, 'screening_and_enro_arm_1'), axis=1
     )
 
+    LOG.info(f'<{len(orders)}> orders remain for AIRS after filtering.')
     return orders
