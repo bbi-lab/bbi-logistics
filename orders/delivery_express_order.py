@@ -32,6 +32,8 @@ def main(args):
 
         redcap_project = init_project(project)
         orders = get_redcap_report(redcap_project, project)
+        enrollment_records = get_redcap_report(redcap_project, project, 2401) if project == 'Cascadia' else None
+
 
         num_orders = len(orders.index.get_level_values(0))
         LOG.info(f'Started with <{num_orders}> possible new kit orders in <{project}>.')
@@ -46,7 +48,7 @@ def main(args):
                 orders = filter_airs_orders(orders)
 
             elif project == 'Cascadia':
-                orders = filter_cascadia_orders(orders)
+                orders = filter_cascadia_orders(orders, enrollment_records)
 
             orders = format_id(orders, project)
 
