@@ -28,4 +28,5 @@ def filter_hct_orders(orders):
         lambda row: use_best_address(original_address, row, 'enrollment_arm_1'), axis=1
     )
 
+    LOG.info(f'<{len(orders)}> orders remain for HCT after filtering.')
     return orders
