@@ -30,7 +30,7 @@ def assign_cascadia_location(orders):
     return orders
 
 
-def filter_cascadia_orders(orders, enrollments):
+def filter_cascadia_orders(orders, enrollments, yesterday_only=True):
     '''Filters Cascadia `orders` to those that we need to create orders for'''
     LOG.debug(f'Filtering <{len(orders)}> Cascadia orders.')
 
@@ -53,8 +53,8 @@ def filter_cascadia_orders(orders, enrollments):
     ].dropna(subset=['Order Date']
     ).apply(lambda record: use_best_address(enrollments, record), axis=1)
 
-    # We only need to generate yesterday's orders
-    orders = get_yesterdays_orders(orders)
+    # Only generate yesterdays orders by default
+    orders = get_yesterdays_orders(orders) if yesterday_only else orders
 
     # Set today tomorrow variable based on pickup time preference
     orders['Today Tomorrow'] = orders[['Pickup 1']].apply(lambda x: 0 if x['Pickup 1'] == 1 else 1, axis=1)

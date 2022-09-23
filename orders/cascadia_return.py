@@ -2,7 +2,7 @@
 import envdir, os, logging
 from utils.redcap import init_project, get_redcap_report, format_longitudinal
 from utils.delivery_express import get_de_orders, format_orders_import
-from utils.cascadia import assign_cascadia_location
+from utils.cascadia import filter_cascadia_orders
 
 base_dir = os.path.abspath(__file__ + "/../../")
 envdir.open(os.path.join(base_dir, '.env/de'))
@@ -19,13 +19,14 @@ PROJECT = "Cascadia"
 def main():
     redcap_project = init_project(PROJECT)
     redcap_orders = get_redcap_report(redcap_project, PROJECT)
+    redcap_enrollments = get_redcap_report(redcap_project, PROJECT, 2401)
 
     if len(redcap_orders) == 0:
         LOG.info(f'No orders to process, exiting...')
         return
 
     redcap_orders = format_longitudinal(redcap_orders, PROJECT)
-    redcap_orders = assign_cascadia_location(redcap_orders)
+    redcap_orders = filter_cascadia_orders(redcap_orders, redcap_enrollments, False)
 
     redcap_orders = redcap_orders.astype({'Record Id': int})
     redcap_orders['orderId'] = redcap_orders.dropna(

@@ -34,7 +34,6 @@ def main(args):
         orders = get_redcap_report(redcap_project, project)
         enrollment_records = get_redcap_report(redcap_project, project, 2401) if project == 'Cascadia' else None
 
-
         num_orders = len(orders.index.get_level_values(0))
         LOG.info(f'Started with <{num_orders}> possible new kit orders in <{project}>.')
 
