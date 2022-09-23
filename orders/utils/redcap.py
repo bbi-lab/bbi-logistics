@@ -3,9 +3,6 @@ import os, logging, sys
 import pandas as pd
 from redcap import Project
 from urllib.parse import urlparse
-from .airs import filter_airs_orders
-from .hct import filter_hct_orders
-from .cascadia import filter_cascadia_orders
 
 # Place all modules within this script's path
 # TODO: structure directory better so we don't need this
@@ -57,16 +54,6 @@ def format_longitudinal(orders, project):
     orders['Order Date'] = pd.to_datetime(orders['Order Date'])
     orders['Order Date'].replace('', pd.NA, inplace=True)
 
-    if project == 'HCT':
-        orders = filter_hct_orders(orders)
-
-    elif project == 'AIRS':
-        orders = filter_airs_orders(orders)
-
-    elif project == 'Cascadia':
-        orders = filter_cascadia_orders(orders)
-
-    LOG.info(f'<{len(orders)}> orders remain for <{project}> after filtering.')
     return orders
 
 
