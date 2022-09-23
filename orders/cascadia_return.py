@@ -26,7 +26,7 @@ def main():
         return
 
     redcap_orders = format_longitudinal(redcap_orders, PROJECT)
-    redcap_orders = filter_cascadia_orders(redcap_orders, redcap_enrollments, False)
+    redcap_orders = filter_cascadia_orders(redcap_orders, redcap_enrollments)
 
     redcap_orders = redcap_orders.astype({'Record Id': int})
     redcap_orders['orderId'] = redcap_orders.dropna(
