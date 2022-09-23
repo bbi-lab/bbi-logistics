@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import envdir, os, logging
+import envdir, os, logging, argparse
 from utils.redcap import init_project, get_redcap_report, format_longitudinal
 from utils.delivery_express import get_de_orders, format_orders_import
 from utils.cascadia import assign_cascadia_location
@@ -16,7 +16,7 @@ LOG.setLevel(LOG_LEVEL)
 
 PROJECT = "Cascadia"
 
-def main():
+def main(args):
     redcap_project = init_project(PROJECT)
     redcap_orders = get_redcap_report(redcap_project, PROJECT)
 
@@ -34,12 +34,17 @@ def main():
     formatted_import = format_orders_import(redcap_orders)
 
     if len(formatted_import):
-        LOG.info(f'Importing {len(formatted_import)} new return orders to REDCap.')
-        redcap_project.import_records(formatted_import, overwrite='overwrite')
+        if args.import_to_redcap:
+            LOG.info(f'Importing {len(formatted_import)} new return orders to REDCap.')
+            redcap_project.import_records(formatted_import, overwrite='overwrite')
+        else:
+            LOG.info(f'Skipping import to REDCap due to <--import={args.import_to_redcap}>.')
     else:
         LOG.info('No new return orders remain after filtering. No imports necessary to REDCap.')
 
 
 if __name__ == "__main__":
-    # TODO: add command line option to skip redcap import during testing
-    main()
+    parser = argparse.ArgumentParser(description='Update REDCap records with existing orders from the Delivery Express API.')
+    parser.add_argument('--import-to-redcap', action='store_true', help='Flag to indicate whether order numbers should be imported into REDCap.')
+
+    main(parser.parse_args())
