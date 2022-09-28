@@ -293,3 +293,20 @@ def get_yesterdays_orders(orders):
     LOG.info(f'Filtering orders to those requested on <{yesterday.strftime("%m-%d-%Y")}>.')
 
     return orders[orders['Order Date'] == yesterday.strftime('%m-%d-%Y')]
+
+
+def household_fully_consented_and_enrolled(house_id, participants, order_report):
+    """
+    Check if any participant in a household is in need of a resupply. This is true if they
+    have less kits than the passed threshold number.
+    """
+
+    for participant in participants:
+        pt_data = order_report.loc[[(house_id, participant)]]
+
+        if not (any(pt_data['enrollment_survey_complete'] == 2) and any(pt_data['consent_form_complete'] == 2)):
+            LOG.debug(f'Participant <{participant}> must be consented and enrolled for household <{house_id}> to be fully consented and enrolled.')
+            return False
+
+    LOG.debug(f'All participants in household <{house_id}> are consented and enrolled.')
+    return True
