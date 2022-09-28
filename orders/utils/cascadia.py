@@ -261,7 +261,8 @@ def household_needs_resupply(house_id, participants, order_report, threshold=3):
 
         num_kits = get_participant_kit_count(pt_data)
 
-        if num_kits < threshold:
+        # participant should have some barcodes activated in addition to being below the threshold to trigger a resupply
+        if num_kits < threshold and any(pt_data['swab_barcodes_complete'] == 2):
             LOG.debug(f'Participant <{participant}> needs a resupply. Triggering resupply for all participants in household <{house_id}>.')
             return True
 
