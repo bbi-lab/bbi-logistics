@@ -261,7 +261,8 @@ def household_needs_resupply(house_id, participants, order_report, threshold=3):
 
         num_kits = get_participant_kit_count(pt_data)
 
-        if num_kits < threshold:
+        # participant should have some barcodes activated in addition to being below the threshold to trigger a resupply
+        if num_kits < threshold and any(pt_data['swab_barcodes_complete'] == 2):
             LOG.debug(f'Participant <{participant}> needs a resupply. Triggering resupply for all participants in household <{house_id}>.')
             return True
 
@@ -292,3 +293,20 @@ def get_yesterdays_orders(orders):
     LOG.info(f'Filtering orders to those requested on <{yesterday.strftime("%m-%d-%Y")}>.')
 
     return orders[orders['Order Date'] == yesterday.strftime('%m-%d-%Y')]
+
+
+def household_fully_consented_and_enrolled(house_id, participants, order_report):
+    """
+    Check if any participant in a household is in need of a resupply. This is true if they
+    have less kits than the passed threshold number.
+    """
+
+    for participant in participants:
+        pt_data = order_report.loc[[(house_id, participant)]]
+
+        if not (any(pt_data['enrollment_survey_complete'] == 2) and any(pt_data['consent_form_complete'] == 2)):
+            LOG.debug(f'Participant <{participant}> must be consented and enrolled for household <{house_id}> to be fully consented and enrolled.')
+            return False
+
+    LOG.debug(f'All participants in household <{house_id}> are consented and enrolled.')
+    return True

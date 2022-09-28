@@ -3,7 +3,7 @@ import os, sys, logging, envdir, datetime, argparse
 import pandas as pd
 from utils.redcap import init_project, get_redcap_report, get_cascadia_study_pause_reports
 from utils.common import USPS_EXPORT_COLS, LOGISTICS_S3_BUCKET, LOGISTICS_USPS_PATH, export_orders
-from utils.cascadia import append_order, get_household_address, participant_under_study_pause, household_needs_resupply, get_participant_kit_count
+from utils.cascadia import append_order, get_household_address, participant_under_study_pause, household_needs_resupply, household_fully_consented_and_enrolled, get_participant_kit_count
 
 # Place all modules within this script's path
 BASE_DIR = os.path.abspath(__file__ + "/../../")
@@ -52,6 +52,7 @@ def main(args):
         # first need to check if any participants in a househould need a resupply. If they do, we will
         # be resupplying ALL participants in the househould, even if they don't necessarily need it.
         needs_resupply = household_needs_resupply(house_id, participants, order_report, threshold=3)
+        hh_fully_consented = household_fully_consented_and_enrolled(house_id, participants, order_report)
         LOG.debug(f'Resupply is set to <{needs_resupply}> for household <{house_id}>.')
 
         for participant in participants:
@@ -63,14 +64,14 @@ def main(args):
                 LOG.debug(f'Participant <{participant}> must be consented and enrolled to receive swab kits.')
                 continue
 
-            # if no swab barcodes have been completed they need a welcome kit and won't need anything else
-            if not any(pt_data['swab_barcodes_complete'] == 2):
-                LOG.debug(f'Participant <{participant}> has no complete swabs. Adding a welcome kit to their inventory.')
-                kits_needed['welcome'][participant] = 1
-                continue
-
             if participant_under_study_pause(pause_report, house_id, participant):
                 LOG.info(f'Participant <{participant}> from household <{house_id}> is under study pause. Deliveries are stopped until the pause end date.')
+                continue
+
+            # if no swab barcodes have been completed and the household is fully enrolled + consented they need a welcome kit and won't need anything else
+            if hh_fully_consented and not any(pt_data['swab_barcodes_complete'] == 2):
+                LOG.debug(f'Adding a welcome kit to participant <{participant}> inventory as household <{house_id}> is fully consented + enrolled.')
+                kits_needed['welcome'][participant] = 1
                 continue
 
             if needs_resupply:
