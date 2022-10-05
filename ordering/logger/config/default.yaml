@@ -1,0 +1,21 @@
+---
+version: 1
+
+root:
+  # emit everything to the root level
+  level: NOTSET
+  handlers:
+    - console
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: !coalesce
+      - !LOG_LEVEL
+      - INFO
+    formatter: console
+
+formatters:
+  console:
+    format: "[%(asctime)s] %(name)-40s %(levelname)-8s %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S%z"

@@ -3,13 +3,6 @@ import os, logging, json, base64, requests
 import pandas as pd
 from datetime import datetime as dt
 
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig(
-    format = "[%(asctime)s] %(name)-20s %(levelname)-8s %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S%z",
-    level = LOG_LEVEL
-)
 LOG = logging.getLogger(__name__)
 
 

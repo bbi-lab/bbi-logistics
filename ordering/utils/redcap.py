@@ -12,14 +12,6 @@ sys.path.append(base_dir)
 from etc.ordering_script_config_map import PROJECT_DICT
 
 STUDY_PAUSE_REPORT_IDS = [1897, 1900]
-
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig(
-    format = "[%(asctime)s] %(name)-20s %(levelname)-8s %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S%z",
-    level = LOG_LEVEL
-)
 LOG = logging.getLogger(__name__)
 
 

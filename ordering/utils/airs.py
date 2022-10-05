@@ -1,5 +1,5 @@
 """order utilities for the AIRS project"""
-import os, logging
+import logging
 from .common import use_best_address
 
 AIRS_ORDER_FIELDS = [
@@ -13,13 +13,6 @@ AIRS_ORDER_FIELDS_2 = [
     "Delivery Instructions 2", "Pickup Location 2"
 ]
 
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig(
-    format = "[%(asctime)s] %(name)-20s %(levelname)-8s %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S%z",
-    level = LOG_LEVEL
-)
 LOG = logging.getLogger(__name__)
 
 

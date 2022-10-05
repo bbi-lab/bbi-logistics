@@ -1,14 +1,7 @@
 """Shared order utilities for redcap project data manipulation"""
-import os, logging, glob
+import logging
 import pandas as pd
 
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig(
-    format = "[%(asctime)s] %(name)-20s %(levelname)-8s %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S%z",
-    level = LOG_LEVEL
-)
 LOG = logging.getLogger(__name__)
 
 # Logistics S3 paths
@@ -51,7 +44,7 @@ def use_best_address(enrollment_records, replacement_record, event=''):
     # grab the index we need to update on and filter enrollment records by this index to get the
     # enrollment associated with this row/participant.
     record_index = replacement_record.name if not event else (replacement_record.name[0], event)
-    LOG.info(f'Determining best address for record {record_index}')
+    LOG.debug(f'Determining best address for record {record_index}')
 
     enrollment_record = enrollment_records.filter(items=[record_index], axis=0).squeeze(axis=0)
     updated_record = replacement_record.copy()

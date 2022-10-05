@@ -1,15 +1,8 @@
 """order utilities for the Cascadia project"""
-import os, logging, datetime
+import logging, datetime
 import pandas as pd
 from .common import USPS_EXPORT_COLS, use_best_address
 
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig(
-    format = "[%(asctime)s] %(name)-20s %(levelname)-8s %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S%z",
-    level = LOG_LEVEL
-)
 LOG = logging.getLogger(__name__)
 
 PROJECT_NAME_MAP = {

@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
 import os, sys, logging, envdir, datetime, argparse
 import pandas as pd
-from utils.redcap import init_project, get_redcap_report, get_cascadia_study_pause_reports
-from utils.common import USPS_EXPORT_COLS, LOGISTICS_S3_BUCKET, LOGISTICS_USPS_PATH, export_orders
-from utils.cascadia import append_order, get_household_address, participant_under_study_pause, household_needs_resupply, get_participant_kit_count
 
-# Place all modules within this script's path
-BASE_DIR = os.path.abspath(__file__ + "/../../")
+# We are limited in that we run these functions as scripts, so have to manually
+# place utilities within our path.
+BASE_DIR = os.path.abspath(__file__ + "/../../../")
 sys.path.append(BASE_DIR)
+
+from ordering.utils.redcap import init_project, get_redcap_report, get_cascadia_study_pause_reports
+from ordering.utils.common import USPS_EXPORT_COLS, LOGISTICS_S3_BUCKET, LOGISTICS_USPS_PATH, export_orders
+from ordering.utils.cascadia import append_order, get_household_address, participant_under_study_pause, household_needs_resupply, get_participant_kit_count
 
 # Set up envdir
 envdir.open(os.path.join(BASE_DIR, '.env/redcap'))
 
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig(
-    format = "[%(asctime)s] %(name)-20s %(levelname)-8s %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S%z",
-    level = LOG_LEVEL
-)
 LOG = logging.getLogger(__name__)
-
 PROJECT = 'Cascadia'
 MAX_KITS = 6
+
 
 def main(args):
     project = init_project(PROJECT)

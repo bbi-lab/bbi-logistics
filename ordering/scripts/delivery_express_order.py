@@ -1,29 +1,22 @@
 #!/usr/bin/env python3
 import sys, logging, os, datetime, envdir, argparse
-from utils.redcap import init_project, get_redcap_report, format_longitudinal
-from utils.common import DE_EXPORT_COLS, LOGISTICS_S3_BUCKET, LOGISTICS_DE_PATH, format_id, export_orders
-from utils.cascadia import filter_cascadia_orders
-from utils.airs import filter_airs_orders
-from utils.hct import filter_hct_orders
 import pandas as pd
 
-# Place all modules within this script's path
-BASE_DIR = os.path.abspath(__file__ + "/../../")
+# We are limited in that we run these functions as scripts, so have to manually
+# place utilities within our path.
+BASE_DIR = os.path.abspath(__file__ + "/../../../")
 sys.path.append(BASE_DIR)
 
+from ordering.utils.redcap import init_project, get_redcap_report, format_longitudinal
+from ordering.utils.common import DE_EXPORT_COLS, LOGISTICS_S3_BUCKET, LOGISTICS_DE_PATH, format_id, export_orders
+from ordering.utils.cascadia import filter_cascadia_orders
+from ordering.utils.airs import filter_airs_orders
+from ordering.utils.hct import filter_hct_orders
 from etc.ordering_script_config_map import PROJECT_DICT
 
-# Set up envdir
 envdir.open(os.path.join(BASE_DIR, '.env/redcap'))
 
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig(
-    format = "[%(asctime)s] %(name)-20s %(levelname)-8s %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S%z",
-    level = LOG_LEVEL
-)
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger('ordering.scripts.delivery_express')
 
 
 def main(args):
