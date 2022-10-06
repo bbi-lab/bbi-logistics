@@ -292,3 +292,23 @@ def get_yesterdays_orders(orders):
     LOG.info(f'Filtering orders to those requested on <{yesterday.strftime("%m-%d-%Y")}>.')
 
     return orders[orders['Order Date'] == yesterday.strftime('%m-%d-%Y')]
+
+
+def drop_repeat_swabs(orders, order_by, keep_oldest=True):
+    """
+    Filters out repeat swabs by the same participant and returns the
+    order list without these repeated swabs. Default behavior is to
+    keep the oldest swab, but can pass *keep_oldest=False* to keep
+    the newest swab instead. Determination of 'oldest' is made by
+    sorting the dataframe on the column provided in *order_by*.
+
+    We don't want DE order numbers to be piped into both swab forms
+    when a participant swabs twice, just the oldest one (hence the
+    default behavior).
+    """
+    keep = 'first' if keep_oldest else 'last'
+    orders.sort_values(by=order_by, inplace=True)
+    duplicated_indices = orders.index.duplicated(keep=keep)
+
+    LOG.debug(f'Dropping the <{keep}> record from <{sum(duplicated_indices)}> duplicated indices on passed order form.')
+    return orders[~duplicated_indices].sort_index()

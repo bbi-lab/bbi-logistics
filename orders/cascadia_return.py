@@ -2,7 +2,7 @@
 import envdir, os, logging, argparse
 from utils.redcap import init_project, get_redcap_report, format_longitudinal
 from utils.delivery_express import get_de_orders, format_orders_import
-from utils.cascadia import filter_cascadia_orders
+from utils.cascadia import filter_cascadia_orders, drop_repeat_swabs
 
 base_dir = os.path.abspath(__file__ + "/../../")
 envdir.open(os.path.join(base_dir, '.env/de'))
@@ -27,6 +27,7 @@ def main(args):
 
     redcap_orders = format_longitudinal(redcap_orders, PROJECT)
     redcap_orders = filter_cascadia_orders(redcap_orders, redcap_enrollments)
+    redcap_orders = drop_repeat_swabs(redcap_orders, 'Order Date')
 
     redcap_orders = redcap_orders.astype({'Record Id': int})
     redcap_orders['orderId'] = redcap_orders.dropna(
