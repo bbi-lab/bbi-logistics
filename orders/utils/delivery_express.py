@@ -69,7 +69,7 @@ def extract_de_orders(redcap_order: pd.Series, de_orders: dict):
 
 def format_orders_import(orders):
     """Format the DE orders so they may be imported into REDCap"""
-    LOG.debug(f'Formatting and verifying record <{len(orders)}> for import to REDCap.')
+    LOG.debug(f'Formatting and verifying <{len(orders)}> records for import to REDCap.')
     return orders[
         ['orderId', 'redcap_repeat_instance', 'redcap_repeat_instrument']
     ].dropna(
