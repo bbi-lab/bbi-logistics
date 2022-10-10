@@ -1,5 +1,5 @@
 """order utilities for the AIRS project"""
-import os, logging
+import logging
 from .common import use_best_address
 
 AIRS_ORDER_FIELDS = [
@@ -13,11 +13,7 @@ AIRS_ORDER_FIELDS_2 = [
     "Delivery Instructions 2", "Pickup Location 2"
 ]
 
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig()
 LOG = logging.getLogger(__name__)
-LOG.setLevel(LOG_LEVEL)
 
 
 def determine_airs_order(row):

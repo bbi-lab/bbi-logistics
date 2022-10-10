@@ -1,12 +1,8 @@
 """order utilities for the HCT project"""
-import os, logging
+import logging
 from .common import use_best_address
 
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig()
 LOG = logging.getLogger(__name__)
-LOG.setLevel(LOG_LEVEL)
 
 
 def filter_hct_orders(orders):

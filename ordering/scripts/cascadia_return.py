@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-import envdir, os, logging, argparse
-from utils.redcap import init_project, get_redcap_report, format_longitudinal
-from utils.delivery_express import get_de_orders, format_orders_import
-from utils.cascadia import filter_cascadia_orders
+import envdir, os, logging, sys, argparse
 
-base_dir = os.path.abspath(__file__ + "/../../")
-envdir.open(os.path.join(base_dir, '.env/de'))
-envdir.open(os.path.join(base_dir, '.env/redcap'))
+BASE_DIR = os.path.abspath(__file__ + "/../../../")
+sys.path.append(BASE_DIR)
 
-# set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig()
-LOG = logging.getLogger(__name__)
-LOG.setLevel(LOG_LEVEL)
+from ordering.utils.redcap import init_project, get_redcap_report, format_longitudinal
+from ordering.utils.delivery_express import get_de_orders, format_orders_import
+from ordering.utils.cascadia import filter_cascadia_orders
 
+envdir.open(os.path.join(BASE_DIR, '.env/de'))
+envdir.open(os.path.join(BASE_DIR, '.env/redcap'))
+
+LOG = logging.getLogger('ordering.scripts.cascadia_return')
 PROJECT = "Cascadia"
 
 def main(args):

@@ -3,11 +3,7 @@ import os, logging, json, base64, requests
 import pandas as pd
 from datetime import datetime as dt
 
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig()
 LOG = logging.getLogger(__name__)
-LOG.setLevel(LOG_LEVEL)
 
 
 def get_de_orders(redcap_order: pd.Series):

@@ -16,6 +16,7 @@ pycap = "~=1.1"
 boto3 = "*"
 fsspec = "*"
 s3fs = "*"
+pyyaml = "*"
 
 [dev-packages]
 yapf = "*"

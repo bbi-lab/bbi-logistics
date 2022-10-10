@@ -12,12 +12,7 @@ sys.path.append(base_dir)
 from etc.ordering_script_config_map import PROJECT_DICT
 
 STUDY_PAUSE_REPORT_IDS = [1897, 1900]
-
-# Set up logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-logging.basicConfig()
 LOG = logging.getLogger(__name__)
-LOG.setLevel(LOG_LEVEL)
 
 
 def init_project(project_name):
