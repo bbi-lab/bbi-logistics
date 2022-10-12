@@ -80,3 +80,19 @@ def get_cascadia_study_pause_reports(project):
 
     LOG.debug(f'Concatenated pause report has <{len(cascadia_study_pauses)}> pause events.')
     return cascadia_study_pauses.sort_index()
+
+
+def import_records_batched(project, records, batch_size = 50):
+    """
+    Import *records* to a REDCap *project* with the given *batch_size*, so as not to overload REDCap's servers
+    with large import requests.
+    """
+    total = len(records)
+    batches = [
+        (i, i + batch_size if i + batch_size < total else total) for i in range(0, total, batch_size)
+    ]
+
+    LOG.debug(f'Importing <{len(batches)}> batches of REDCap data.')
+    for lower_bound, upper_bound in batches:
+        project.import_records(records[lower_bound:upper_bound], overwrite='overwrite')
+        LOG.debug(f'Imported records <{lower_bound}> through <{upper_bound}> to REDCap.')

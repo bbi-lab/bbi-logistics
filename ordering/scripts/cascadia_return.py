@@ -4,7 +4,7 @@ import envdir, os, logging, sys, argparse
 BASE_DIR = os.path.abspath(__file__ + "/../../../")
 sys.path.append(BASE_DIR)
 
-from ordering.utils.redcap import init_project, get_redcap_report, format_longitudinal
+from ordering.utils.redcap import init_project, get_redcap_report, format_longitudinal, import_records_batched
 from ordering.utils.delivery_express import get_de_orders, format_orders_import
 from ordering.utils.cascadia import filter_cascadia_orders
 
@@ -35,7 +35,7 @@ def main(args):
     if len(formatted_import):
         if args.import_to_redcap:
             LOG.info(f'Importing {len(formatted_import)} new return orders to REDCap.')
-            redcap_project.import_records(formatted_import, overwrite='overwrite')
+            import_records_batched(redcap_project, formatted_import)
         else:
             LOG.info(f'Skipping import to REDCap due to <--import={args.import_to_redcap}>.')
     else:
