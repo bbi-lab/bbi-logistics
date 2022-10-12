@@ -61,14 +61,14 @@ def main(args):
                 LOG.debug(f'Participant <{participant}> must be consented and enrolled to receive swab kits.')
                 continue
 
+            if participant_under_study_pause(pause_report, house_id, participant):
+                LOG.info(f'Participant <{participant}> from household <{house_id}> is under study pause. Deliveries are stopped until the pause end date.')
+                continue
+
             # if no swab barcodes have been completed they need a welcome kit and won't need anything else
             if not any(pt_data['swab_barcodes_complete'] == 2):
                 LOG.debug(f'Participant <{participant}> has no complete swabs. Adding a welcome kit to their inventory.')
                 kits_needed['welcome'][participant] = 1
-                continue
-
-            if participant_under_study_pause(pause_report, house_id, participant):
-                LOG.info(f'Participant <{participant}> from household <{house_id}> is under study pause. Deliveries are stopped until the pause end date.')
                 continue
 
             if needs_resupply:
