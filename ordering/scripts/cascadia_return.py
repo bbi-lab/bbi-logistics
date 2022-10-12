@@ -28,14 +28,14 @@ def main(args):
 
     redcap_orders = redcap_orders.astype({'Record Id': int})
     redcap_orders['orderId'] = redcap_orders.dropna(
-        subset=['Record Id']).apply(get_de_orders, axis=1
+        subset=['Record Id']).apply(get_de_orders, axis=1, max_retries=5
     )
     formatted_import = format_orders_import(redcap_orders)
 
     if len(formatted_import):
         if args.import_to_redcap:
-            LOG.info(f'Importing {len(formatted_import)} new return orders to REDCap.')
             import_records_batched(redcap_project, formatted_import)
+            LOG.info(f'Imported {len(formatted_import)} new return orders to REDCap.')
         else:
             LOG.info(f'Skipping import to REDCap due to <--import={args.import_to_redcap}>.')
     else:

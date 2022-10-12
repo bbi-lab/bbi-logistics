@@ -3,6 +3,7 @@ import os, logging, sys
 import pandas as pd
 from redcap import Project
 from urllib.parse import urlparse
+from more_itertools import chunked
 
 # Place all modules within this script's path
 # TODO: structure directory better so we don't need this
@@ -87,12 +88,6 @@ def import_records_batched(project, records, batch_size = 50):
     Import *records* to a REDCap *project* with the given *batch_size*, so as not to overload REDCap's servers
     with large import requests.
     """
-    total = len(records)
-    batches = [
-        (i, i + batch_size if i + batch_size < total else total) for i in range(0, total, batch_size)
-    ]
-
-    LOG.debug(f'Importing <{len(batches)}> batches of REDCap data.')
-    for lower_bound, upper_bound in batches:
-        project.import_records(records[lower_bound:upper_bound], overwrite='overwrite')
-        LOG.debug(f'Imported records <{lower_bound}> through <{upper_bound}> to REDCap.')
+    for chunk in chunked(range(len(records)), batch_size):
+        project.import_records(records.iloc[chunk], overwrite='overwrite')
+        LOG.debug(f'Imported records <{chunk[0]}> up to <{chunk[-1]}> to REDCap.')
