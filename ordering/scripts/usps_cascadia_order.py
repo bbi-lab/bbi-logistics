@@ -56,6 +56,10 @@ def main(args):
             LOG.debug(f'Working on participant <{participant}>.')
             pt_data = order_report.loc[[(house_id, participant)]]
 
+            if any(pt_data['manage_archive']):
+                LOG.debug(f'Participant <{participant}> is archived and no longer needs orders generated for them.')
+                continue
+
             # the participant should be enrolled and consented to get any kits
             if not (any(pt_data['enrollment_survey_complete'] == 2) and any(pt_data['consent_form_complete'] == 2)):
                 LOG.debug(f'Participant <{participant}> must be consented and enrolled to receive swab kits.')
