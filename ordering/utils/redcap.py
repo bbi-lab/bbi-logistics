@@ -3,6 +3,7 @@ import os, logging, sys
 import pandas as pd
 from redcap import Project
 from urllib.parse import urlparse
+from more_itertools import chunked
 
 # Place all modules within this script's path
 # TODO: structure directory better so we don't need this
@@ -80,3 +81,13 @@ def get_cascadia_study_pause_reports(project):
 
     LOG.debug(f'Concatenated pause report has <{len(cascadia_study_pauses)}> pause events.')
     return cascadia_study_pauses.sort_index()
+
+
+def import_records_batched(project, records, batch_size = 50):
+    """
+    Import *records* to a REDCap *project* with the given *batch_size*, so as not to overload REDCap's servers
+    with large import requests.
+    """
+    for chunk in chunked(range(len(records)), batch_size):
+        project.import_records(records.iloc[chunk], overwrite='overwrite')
+        LOG.debug(f'Imported records <{chunk[0]}> up to <{chunk[-1]}> to REDCap.')

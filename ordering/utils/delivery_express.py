@@ -1,12 +1,12 @@
 """order utilities for interacting with delivery express data"""
-import os, logging, json, base64, requests
+import os, logging, json, base64, requests, time
 import pandas as pd
 from datetime import datetime as dt
 
 LOG = logging.getLogger(__name__)
 
 
-def get_de_orders(redcap_order: pd.Series):
+def get_de_orders(redcap_order: pd.Series, max_retries = 5):
     """get existing DE orders for Cascadia from DE API Endpoint"""
     url = "https://deliveryexpresslogistics.dsapp.io/integration/api/v1/orders/search"
 
@@ -20,10 +20,31 @@ def get_de_orders(redcap_order: pd.Series):
     }
     headers = {'Authorization': auth, "Content-Type": "application/*+json"}
 
-    LOG.debug(f'Making request to <{url}> with data <{payload}>')
-    response = requests.post(url, headers=headers, data=json.dumps(payload))
-    de_orders = json.loads(response.text)
+    # with the cascadia project growing, we sometimes run into issues making requests
+    # to the DE servers. we should retry failed requests up to a point, backing off
+    # with each additional failure.
+    attempts = 0
+    delay = 0.5
+    factor = 2
+    while attempts < max_retries:
+        LOG.debug(f'Making request number <{attempts + 1}> to <{url}> with data <{payload}>')
 
+        try:
+            response = requests.post(url, headers=headers, data=json.dumps(payload))
+            response.raise_for_status()
+            break
+
+        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError, requests.exceptions.Timeout) as exc:
+            attempts += 1
+            if attempts == max_retries:
+                LOG.error(f'Aborting request to Delivery Express servers for participant <{redcap_order["Record Id"]}> after <{attempts}>.', exc_info=exc)
+                raise
+            else:
+                LOG.warning(f'Attempt <{attempts}> to reach the Delivery Express servers failed with: {exc} Retrying in <{delay}> seconds.')
+                time.sleep(delay)
+                delay = delay * factor
+
+    de_orders = json.loads(response.text)
     LOG.info(f'Looking up order for pt: <{redcap_order["Record Id"]}>.')
 
     if de_orders['totalCount'] == 0:
@@ -65,7 +86,7 @@ def extract_de_orders(redcap_order: pd.Series, de_orders: dict):
 
 def format_orders_import(orders):
     """Format the DE orders so they may be imported into REDCap"""
-    LOG.debug(f'Formatting and verifying record <{len(orders)}> for import to REDCap.')
+    LOG.debug(f'Formatting and verifying <{len(orders)}> records for import to REDCap.')
     return orders[
         ['orderId', 'redcap_repeat_instance', 'redcap_repeat_instrument']
     ].dropna(

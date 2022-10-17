@@ -17,6 +17,7 @@ boto3 = "*"
 fsspec = "*"
 s3fs = "*"
 pyyaml = "*"
+more_itertools = "*"
 
 [dev-packages]
 yapf = "*"
