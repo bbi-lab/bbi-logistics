@@ -14,7 +14,7 @@ from ordering.utils.cascadia import append_order, get_household_address, partici
 # Set up envdir
 envdir.open(os.path.join(BASE_DIR, '.env/redcap'))
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger('ordering.scripts.usps_cascadia')
 PROJECT = 'Cascadia'
 MAX_KITS = 6
 
@@ -56,7 +56,7 @@ def main(args):
             LOG.debug(f'Working on participant <{participant}>.')
             pt_data = order_report.loc[[(house_id, participant)]]
 
-            if any(pt_data['manage_archive']):
+            if any(pt_data['manage_archive'] == 1):
                 LOG.debug(f'Participant <{participant}> is archived and no longer needs orders generated for them.')
                 continue
 
@@ -117,13 +117,13 @@ def main(args):
 
     if args.s3_upload:
         export_orders(orders, f's3://{LOGISTICS_S3_BUCKET}/{LOGISTICS_USPS_PATH}/{file_name}', s3=True)
-        LOG.info(f'Successfully uploaded DE orders to <{LOGISTICS_S3_BUCKET}/{LOGISTICS_USPS_PATH}/{file_name}>')
+        LOG.info(f'Successfully uploaded USPS orders to <{LOGISTICS_S3_BUCKET}/{LOGISTICS_USPS_PATH}/{file_name}>')
     else:
         LOG.debug(f'Skipping order upload to S3 with <--s3-upload={args.s3_upload}>.')
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Generate and upload a delivery express order form for studies needing kit pickups.')
+    parser = argparse.ArgumentParser(description='Generate and upload a USPS order form for Cascadia participants needing kits.')
     parser.add_argument('--save', action='store_true', help='Flag to indicate the order form should be saved to the data directory.')
     parser.add_argument('--s3-upload', action='store_true', help='Flag to indicate the order form should be uploaded to S3.')
 
